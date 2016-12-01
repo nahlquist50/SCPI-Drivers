@@ -41,7 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MultimeterDrivers.cs" />
-    <Compile Include="PNAXDriver.cs" />
+    <Compile Include="NetworkAnalyzerDrivers.cs" />
     <Compile Include="PowerMeterDrivers.cs" />
     <Compile Include="PowerSupplyDrivers.cs" />
     <Compile Include="PulseGeneratorDrivers.cs" />
