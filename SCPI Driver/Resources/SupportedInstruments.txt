@@ -1,0 +1,59 @@
+﻿! This document lists the instruments and model numbers supported by this SCPI driver
+!
+! Last Modified: 10/30/2015
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! Nick Ahlquist
+! Design Engineer
+! MACOM
+! nicholas.ahlquist@macom.com
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!
+! Notes:
+!	- Power meter model 8542B is incompatible with many of the Get... methods included in the driver.
+!	  This is because the 8542B does not use standard SCPI language commands.
+!	- Power Supply model 6626A is incompatible with many of the status register commands.
+!
+!
+! Format:
+! Class Name,Model#
+!
+!
+! Signal Generators
+! ---------------------
+SignalGenerator,83711A
+SignalGenerator,83711B
+SignalGenerator,83712A
+SignalGenerator,83712B
+SignalGenerator,8648A
+SignalGenerator,8648B
+SignalGenerator,8648C
+SignalGenerator,8648D
+!
+!
+! Power Supplies
+POWER_SUPPLY,E3631A
+POWER_SUPPLY,6626A
+POWER_SUPPLY,6642A
+POWER_SUPPLY,N7953A
+!
+! Multimeters
+Multimeter,34401A
+!
+! PNAX
+PNAX,N5245A
+!
+! Power Meters
+Gigatronics854x,8541B
+Gigatronics854x,8542B
+Gigatronics854x,8541C
+Gigatronics854x,8542C
+!
+! Pulse Generators
+PulseGenerator,81101A
+PulseGenerator,81104A
+PulseGenerator,81110A
+!
+! Spectrum Analyzers
+SPECTRUM_ANALYZER,E4440A
