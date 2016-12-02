@@ -15,14 +15,234 @@ namespace SCPI {
         public class PNAX : SCPIDriver {
 
             // Nested Classes
+            public class CapabilitiesClass {
+
+                // Variables
+                private PNAX _parentPNAX;
+
+                // Properties
+                /// <summary>
+                /// Maximum number of channels allowed.
+                /// </summary>
+                public int MaximumChannels
+                { get; private set; }
+                /// <summary>
+                /// Maximum number of windows allowed.
+                /// </summary>
+                public int MaximumWindows
+                { get; private set; }
+                /// <summary>
+                /// Maximum number of traces per window.
+                /// </summary>
+                public int MaximumTracesPerWindow
+                { get; private set; }
+                /// <summary>
+                /// Maximum number of points allowed.
+                /// </summary>
+                public int MaximumPoints
+                { get; private set; }
+                /// <summary>
+                /// Minimum number of points allowed
+                /// </summary>
+                public int MinimumPoints
+                { get; private set; }
+                /// <summary>
+                /// Maximum frequency allowed.
+                /// </summary>
+                public double MaximumFrequency
+                { get; private set; }
+                /// <summary>
+                /// Minimum frequency allowed.
+                /// </summary>
+                public double MinimumFrequency
+                { get; private set; }
+
+                // Constructor
+                internal CapabilitiesClass(PNAX ParentPNAX)
+                {
+                    _parentPNAX = ParentPNAX;
+                }
+
+                // Private Methods
+                private void FindMaximumChannels()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:CAPability:CHANnels:MAXimum:COUNt?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    MaximumChannels = (int)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                }
+                private void FindMaximumWindows()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:CAPability:WINDows:MAXimum:COUNt?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    MaximumWindows = (int)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                }
+                private void FindMaximumTracesPerWindow()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:CAPability:WINDows:TRACes:MAXimum:COUNt?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    MaximumTracesPerWindow = (int)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                }
+                private void FindMaximumPoints()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:CAPability:POINts:MAXimum?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    MaximumPoints = (int)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                }
+                private void FindMinimumPoints()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:CAPability:POINts:Minimum?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    MinimumPoints = (int)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                }
+                private void FindMaximumFrequency()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:CAPability:PRESet:FREQuency:MAXimum?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    MaximumFrequency = (double)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                }
+                private void FindMinimumFrequency()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:CAPability:PRESet:FREQuency:MINimum?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    MinimumFrequency = (double)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                }
+
+                // Internal Methods
+                internal void FindCapabilities()
+                {
+                    FindMaximumChannels();
+                    FindMaximumWindows();
+                    FindMaximumTracesPerWindow();
+                    FindMaximumPoints();
+                    FindMinimumPoints();
+                    FindMaximumFrequency();
+                    FindMinimumFrequency();
+                }
+            }
+            public class DisplayClass {
+
+                // Variables
+                private PNAX _parentPNAX;
+                private bool _enable;
+                private bool _visible;
+                private GridLineTypeEnum _gridLineType;
+
+                // Properties
+                /// <summary>
+                /// Enable/disable all analyzer display information in all windows in the analyzer application.
+                /// Marker data is not updated. More CPU time is spent making measurements instead of updating the display.
+                /// </summary>
+                public bool Enable
+                {
+                    get { return this.GetEnable(); }
+                    set { this.SetEnable(value); }
+                }
+                /// <summary>
+                /// Makes the PNA Application visible or not visible.
+                /// </summary>
+                public bool Visible
+                {
+                    get { return this.GetVisible(); }
+                    set { this.SetVisible(value); }
+                }
+                public GridLineTypeEnum GridLineType
+                {
+                    get { return this.GetGridLineType(); }
+                    set { this.SetGridLineType(value); }
+                }
+                
+                // Constructor
+                internal DisplayClass(PNAX ParentPNAX)
+                {
+                    _parentPNAX = ParentPNAX;
+                }
+
+                // Private Methods
+                private bool GetEnable()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("DISPlay:ENABle?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    _enable = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                    return _enable;
+                }
+                private void SetEnable(bool Enable)
+                {
+                    _enable = Enable;
+                    _parentPNAX.WriteString(String.Format("DISPlay:ENABle {0}", _enable ? "ON" : "OFF"));
+                }
+                private bool GetVisible()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("DISPlay:VISible?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    _visible = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                    return _visible;
+                }
+                private void SetVisible(bool Visible)
+                {
+                    _visible = Visible;
+                    _parentPNAX.WriteString(String.Format("DISPlay:VISible {0}", _visible ? "ON" : "OFF"));
+                }
+                private GridLineTypeEnum GetGridLineType()
+                {
+                    string retVal;
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("DISPlay:WINDow:TRACe:GRATicule:GRID:LTYPE?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    retVal = _parentPNAX.ReadString();
+                    if (retVal.Contains("SOL")) {
+                        _gridLineType = GridLineTypeEnum.Solid;
+                    } else {
+                        _gridLineType = GridLineTypeEnum.Dotted;
+                    }
+                    return _gridLineType;
+                }
+                private void SetGridLineType(GridLineTypeEnum GridLineType)
+                {
+                    _gridLineType = GridLineType;
+                    switch (_gridLineType) {
+                        case GridLineTypeEnum.Solid:
+                            _parentPNAX.WriteString("DISPlay:WINDow:TRACe:GRATicule:GRID:LTYPE SOLid");
+                            break;
+                        case GridLineTypeEnum.Dotted:
+                            _parentPNAX.WriteString("DISPlay:WINDow:TRACe:GRATicule:GRID:LTYPE DOTTed");
+                            break;
+                    }
+                }
+
+                // Public Methods
+                /// <summary>
+                /// Grabs a screenshot of the display. It is recommended that the user increase
+                /// the timeout of the driver to approximately 60 seconds before calling this function.
+                /// The user can then reset the timeout after this function completes.
+                /// </summary>
+                public Bitmap GetScreenshot()
+                {
+                    _parentPNAX.WriteString("HCOPy:SDUMp:DATA:FORMat BMP");
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("HCOPy:SDUMp:DATA?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    return new Bitmap((Image)((new ImageConverter()).ConvertFrom((byte[])_parentPNAX.ReadIEEEBlock(IEEEBinaryType.BinaryType_UI1, true, true))));
+                }
+
+            }
             public class TriggerClass {
 
                 // Variables
                 private PNAX _parentPNAX;
                 private TriggerSourceEnum _source;
                 private TriggerScopeEnum _scope;
-                private ExternalTriggerTypeEnum _externalTriggerType;
-                private ExternalTriggerSlopeEnum _externalTriggerSlope;
+                private ExternalTriggerSlopeEnum _externalSlope;
+                private ExternalTriggerTypeEnum _externalType;
+                private ExternalTriggerRouteEnum _externalRoute;
                 private double _globalDelay;
 
                 // Properties
@@ -36,16 +256,24 @@ namespace SCPI {
                     get { return this.GetScope(); }
                     set { this.SetScope(value); }
                 }
-                public ExternalTriggerTypeEnum ExternalTriggerType
+                public ExternalTriggerSlopeEnum ExternalSlope
                 {
-                    get { return this.GetExternalTriggerType(); }
-                    set { this.SetExternalTriggerType(value); }
+                    get { return this.GetExternalSlope(); }
+                    set { this.SetExternalSlope(value); }
                 }
-                public ExternalTriggerSlopeEnum ExternalTriggerSlope
+                public ExternalTriggerTypeEnum ExternalType
                 {
-                    get { return this.GetExternalTriggerSlope(); }
-                    set { this.SetExternalTriggerSlope(value); }
+                    get { return this.GetExternalType(); }
+                    set { this.SetExternalType(value); }
                 }
+                public ExternalTriggerRouteEnum ExternalRoute
+                {
+                    get { return this.GetExternalRoute(); }
+                    set { this.SetExternalRoute(value); }
+                }                
+                /// <summary>
+                /// Global Trigger Delay in seconds.  Must be between 0 and 3 seconds.
+                /// </summary>
                 public double GlobalDelay
                 {
                     get { return this.GetGlobalDelay(); }
@@ -58,8 +286,8 @@ namespace SCPI {
                     _parentPNAX = ParentPNAX;
                 }
 
-                // Protected Methods
-                protected virtual TriggerSourceEnum GetSource()
+                // Private Methods
+                private TriggerSourceEnum GetSource()
                 {
                     string retVal;
                     _parentPNAX.ClearEventRegisters();
@@ -75,22 +303,22 @@ namespace SCPI {
                     }
                     return _source;
                 }
-                protected virtual void SetSource(TriggerSourceEnum Source)
+                private void SetSource(TriggerSourceEnum Source)
                 {
                     _source = Source;
                     switch (_source) {
-                        case TriggerSourceEnum.Immediate:
-                            _parentPNAX.WriteString("TRIGger:SEQuence:SOURce IMMediate");
-                            break;
                         case TriggerSourceEnum.External:
                             _parentPNAX.WriteString("TRIGger:SEQuence:SOURce EXTernal");
+                            break;
+                        case TriggerSourceEnum.Immediate:
+                            _parentPNAX.WriteString("TRIGger:SEQuence:SOURce IMMediate");
                             break;
                         case TriggerSourceEnum.Manual:
                             _parentPNAX.WriteString("TRIGger:SEQuence:SOURce MANual");
                             break;
                     }
                 }
-                protected virtual TriggerScopeEnum GetScope()
+                private TriggerScopeEnum GetScope()
                 {
                     string retVal;
                     _parentPNAX.ClearEventRegisters();
@@ -104,7 +332,7 @@ namespace SCPI {
                     }
                     return _scope;
                 }
-                protected virtual void SetScope(TriggerScopeEnum Scope)
+                private void SetScope(TriggerScopeEnum Scope)
                 {
                     _scope = Scope;
                     switch (_scope) {
@@ -116,33 +344,7 @@ namespace SCPI {
                             break;
                     }
                 }
-                protected virtual ExternalTriggerTypeEnum GetExternalTriggerType()
-                {
-                    string retVal;
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString("TRIGger:SEQuence:TYPE?");
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    retVal = _parentPNAX.ReadString();
-                    if (retVal.Contains("EDGE")) {
-                        _externalTriggerType = ExternalTriggerTypeEnum.Edge;
-                    } else {
-                        _externalTriggerType = ExternalTriggerTypeEnum.Level;
-                    }
-                    return _externalTriggerType;
-                }
-                protected virtual void SetExternalTriggerType(ExternalTriggerTypeEnum ExternalTriggerType)
-                {
-                    _externalTriggerType = ExternalTriggerType;
-                    switch (_externalTriggerType) {
-                        case ExternalTriggerTypeEnum.Edge:
-                            _parentPNAX.WriteString("TRIGger:SEQuence:TYPE EDGE");
-                            break;
-                        case ExternalTriggerTypeEnum.Level:
-                            _parentPNAX.WriteString("TRIGger:SEQuence:TYPE LEVel");
-                            break;
-                    }
-                }
-                protected virtual ExternalTriggerSlopeEnum GetExternalTriggerSlope()
+                private ExternalTriggerSlopeEnum GetExternalSlope()
                 {
                     string retVal;
                     _parentPNAX.ClearEventRegisters();
@@ -150,16 +352,16 @@ namespace SCPI {
                     _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
                     retVal = _parentPNAX.ReadString();
                     if (retVal.Contains("POS")) {
-                        _externalTriggerSlope = ExternalTriggerSlopeEnum.Positive;
+                        _externalSlope = ExternalTriggerSlopeEnum.Positive;
                     } else {
-                        _externalTriggerSlope = ExternalTriggerSlopeEnum.Negative;
+                        _externalSlope = ExternalTriggerSlopeEnum.Negative;
                     }
-                    return _externalTriggerSlope;
+                    return _externalSlope;
                 }
-                protected virtual void SetExternalTriggerSlope(ExternalTriggerSlopeEnum ExternalTriggerSlope)
+                private void SetExternalSlope(ExternalTriggerSlopeEnum ExternalSlope)
                 {
-                    _externalTriggerSlope = ExternalTriggerSlope;
-                    switch (_externalTriggerSlope) {
+                    _externalSlope = ExternalSlope;
+                    switch (_externalSlope) {
                         case ExternalTriggerSlopeEnum.Positive:
                             _parentPNAX.WriteString("TRIGger:SEQuence:SLOPe POSitive");
                             break;
@@ -168,7 +370,33 @@ namespace SCPI {
                             break;
                     }
                 }
-                protected virtual double GetGlobalDelay()
+                private ExternalTriggerTypeEnum GetExternalType()
+                {
+                    string retVal;
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("TRIGger:SEQuence:TYPE?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    retVal = _parentPNAX.ReadString();
+                    if (retVal.Contains("EDGE")) {
+                        _externalType = ExternalTriggerTypeEnum.Edge;
+                    } else {
+                        _externalType = ExternalTriggerTypeEnum.Level;
+                    }
+                    return _externalType;
+                }
+                private void SetExternalType(ExternalTriggerTypeEnum ExternalType)
+                {
+                    _externalType = ExternalType;
+                    switch (_externalType) {
+                        case ExternalTriggerTypeEnum.Edge:
+                            _parentPNAX.WriteString("TRIGger:SEQuence:TYPE EDGE");
+                            break;
+                        case ExternalTriggerTypeEnum.Level:
+                            _parentPNAX.WriteString("TRIGger:SEQuence:TYPE LEVel");
+                            break;
+                    }
+                }
+                private double GetGlobalDelay()
                 {
                     _parentPNAX.ClearEventRegisters();
                     _parentPNAX.WriteString("TRIGger:DELay?");
@@ -176,38 +404,161 @@ namespace SCPI {
                     _globalDelay = (double)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
                     return _globalDelay;
                 }
-                protected virtual void SetGlobalDelay(double GlobalDelay)
+                private void SetGlobalDelay(double GlobalDelay)
                 {
+                    if (GlobalDelay < 0 || 3 < GlobalDelay)
+                        throw new System.ArgumentException("Global Delay must be between 0 and 3 seconds.", "GlobalDelay");
+
                     _globalDelay = GlobalDelay;
                     _parentPNAX.WriteString(String.Format("TRIGger:DELay {0}", _globalDelay));
                 }
+                private ExternalTriggerRouteEnum GetExternalRoute()
+                {
+                    string retVal;
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("TRIGger:SEQuence:ROUTE:INPut?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    retVal = _parentPNAX.ReadString();
+                    if (retVal.Contains("MAIN")) {
+                        _externalRoute = ExternalTriggerRouteEnum.Main;
+                    } else if (retVal.Contains("MATH")) {
+                        _externalRoute = ExternalTriggerRouteEnum.Math;
+                    } else {
+                        _externalRoute = ExternalTriggerRouteEnum.Pulse3;
+                    }
+                    return _externalRoute;
+                }
+                private void SetExternalRoute(ExternalTriggerRouteEnum ExternalRoute)
+                {
+                    _externalRoute = ExternalRoute;
+                    switch (_externalRoute) {
+                        case ExternalTriggerRouteEnum.Main:
+                            _parentPNAX.WriteString("TRIGger:SEQuence:ROUTE:INPut MAIN");
+                            break;
+                        case ExternalTriggerRouteEnum.Math:
+                            _parentPNAX.WriteString("TRIGger:SEQuence:ROUTE:INPut MATH");
+                            break;
+                        case ExternalTriggerRouteEnum.Pulse3:
+                            _parentPNAX.WriteString("TRIGger:SEQuence:ROUTE:INPut PULSE3");
+                            break;
+                    }
+                }
+
+                // Public Methods
+                /// <summary>
+                /// Stops all sweeps - then resumes per current trigger settings.
+                /// </summary>
+                public void Abort()
+                {
+                    _parentPNAX.WriteString("ABORt");
+                }
+                /// <summary>
+                /// Places all channels in hold mode.
+                /// </summary>
+                public void HoldAllChannels()
+                {
+                    _parentPNAX.WriteString("SYSTem:CHANnels:HOLD");
+                }
+                /// <summary>
+                /// Resumes the trigger mode of all channels that was in effect before sending HoldAllChannels()
+                /// </summary>
+                public void ResumeAllChannels()
+                {
+                    _parentPNAX.WriteString("SYSTem:CHANnels:RESume");
+                }
+            }
+            public class OutputClass {
+
+                // Variables
+                private PNAX _parentPNAX;
+                private bool _rfSourceState;
+                private bool _noiseSourceState;
+
+                // Properties
+                /// <summary>
+                /// Turns RF power from the source on or off.
+                /// </summary>
+                public bool RFSourceState
+                {
+                    get { return this.GetRFSourceState(); }
+                    set { this.SetRFSourceState(value); }
+                }
+                /// <summary>
+                /// Sets and reads the noise source (28V) on or off.
+                /// </summary>
+                public bool NoiseSourceState
+                {
+                    get { return this.GetNoiseSourceState(); }
+                    set { this.SetNoiseSourceState(value); }
+                }
+
+                // Constructor
+                internal OutputClass(PNAX ParentPNAX)
+                {
+                    _parentPNAX = ParentPNAX;
+                }
+
+                // Private Methods
+                private bool GetRFSourceState()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("OUTPut:STATe?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    _rfSourceState = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                    return _rfSourceState;
+                }
+                private void SetRFSourceState(bool RFSourceState)
+                {
+                    _rfSourceState = RFSourceState;
+                    _parentPNAX.WriteString(String.Format("OUTPut:STATe {0}", _rfSourceState));
+                }
+                private bool GetNoiseSourceState()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("OUTPut:MANual:NOISe:STATe?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    _noiseSourceState = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                    return _noiseSourceState;
+                }
+                private void SetNoiseSourceState(bool NoiseSourceState)
+                {
+                    _noiseSourceState = NoiseSourceState;
+                    _parentPNAX.WriteString(String.Format("OUTPut:MANual:NOISe:STATe {0}", _noiseSourceState));
+                }
 
             }
-            public abstract class ChannelClass {
+            public class ChannelClass {
 
                 // Nested Classes
                 public class AveragingClass {
 
-                    // Enumerations
-                    public enum AveragingModeEnum { Point, Sweep };
-
                     // Variables
                     private ChannelClass _parentChannel;
                     private bool _enabled;
-                    private ushort _count;
+                    private int _count;
                     private AveragingModeEnum _mode;
 
                     // Properties
+                    /// <summary>
+                    /// Enable or disable trace averaging on this channel.
+                    /// </summary>
                     public bool Enabled
                     {
                         get { return this.GetEnabled(); }
                         set { this.SetEnabled(value); }
                     }
-                    public ushort Count
+                    /// <summary>
+                    /// Number of measurement to combine for an average.
+                    /// Must be between 1 and 65536.
+                    /// </summary>
+                    public int Count
                     {
                         get { return this.GetCount(); }
                         set { this.SetCount(value); }
                     }
+                    /// <summary>
+                    /// Averaging mode, point or sweep.
+                    /// </summary>
                     public AveragingModeEnum Mode
                     {
                         get { return this.GetMode(); }
@@ -220,8 +571,8 @@ namespace SCPI {
                         _parentChannel = ParentChannel;
                     }
 
-                    // Protected Methods
-                    protected virtual bool GetEnabled()
+                    // Private Methods
+                    private bool GetEnabled()
                     {
                         _parentChannel._parentPNAX.ClearEventRegisters();
                         _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:AVERage:STATe?", _parentChannel.Number));
@@ -229,28 +580,28 @@ namespace SCPI {
                         _enabled = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
                         return _enabled;
                     }
-                    protected virtual void SetEnabled(bool Enabled)
+                    private void SetEnabled(bool Enabled)
                     {
                         _enabled = Enabled;
                         _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:AVERage:STATe {1}", _parentChannel.Number, _enabled ? "ON" : "OFF"));
                     }
-                    protected virtual ushort GetCount()
+                    private int GetCount()
                     {
                         _parentChannel._parentPNAX.ClearEventRegisters();
                         _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:AVERage:COUNt?", _parentChannel.Number));
                         _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _count = (ushort)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I2, true);
+                        _count = (int)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
                         return _count;
                     }
-                    protected virtual void SetCount(ushort Count)
+                    private void SetCount(int Count)
                     {
-                        if (Count == 0)
-                            throw new System.ArgumentException("Averaging Count must be greater than 0 and less than 65536");
+                        if (Count < 1 || 65536 < Count)
+                            throw new System.ArgumentOutOfRangeException("Count must be between 1 and 65536.", "Count");
 
                         _count = Count;
                         _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:AVERage:COUNt {1}", _parentChannel.Number, _count));
                     }
-                    protected virtual AveragingModeEnum GetMode()
+                    private AveragingModeEnum GetMode()
                     {
                         string retVal;
                         _parentChannel._parentPNAX.ClearEventRegisters();
@@ -264,7 +615,7 @@ namespace SCPI {
                         }
                         return _mode;
                     }
-                    protected virtual void SetMode(AveragingModeEnum Mode)
+                    private void SetMode(AveragingModeEnum Mode)
                     {
                         _mode = Mode;
                         switch (_mode) {
@@ -278,497 +629,732 @@ namespace SCPI {
                     }
 
                     // Public Methods
-                    public virtual void Clear()
+                    /// <summary>
+                    /// Clears and restarts averaging of the measurement data.
+                    /// Does NOT apply to point averaging.
+                    /// </summary>
+                    public void Clear()
                     {
                         _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:AVERage:CLEar", _parentChannel.Number));
                     }
+
                 }
-                public class FrequencyClass {
+                public class MeasurementClass {
+
+                    // Nested Classes
+                    public class OffsetClass {
+                        
+                        // Variables
+                        private MeasurementClass _parentMeasurement;
+                        private double _magnitude;
+                        private double _phase;
+                        private double _slope;
+
+                        // Properties
+                        /// <summary>
+                        /// Offset the data trace magnitude.
+                        /// </summary>
+                        public double Magnitude
+                        {
+                            get { return this.GetMagnitude(); }
+                            set { this.SetMagnitude(value); }
+                        }
+                        /// <summary>
+                        /// Offset the data trace phase in degrees.
+                        /// Must be between -360 and 360.
+                        /// </summary>
+                        public double Phase
+                        {
+                            get { return this.GetPhase(); }
+                            set { this.SetPhase(value); }
+                        }
+                        /// <summary>
+                        /// Offset the data trace magnitude slope in dB/1GHz
+                        /// </summary>
+                        public double Slope
+                        {
+                            get { return this.GetSlope(); }
+                            set { this.SetSlope(value); }
+                        }
+
+                        // Constructor
+                        internal OffsetClass(MeasurementClass ParentMeasurement)
+                        {
+                            _parentMeasurement = ParentMeasurement;
+                        }
+
+                        // Private Methods
+                        private double GetMagnitude()
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _parentMeasurement._parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:OFFset:MAGNitude?", _parentMeasurement._parentChannel.Number));
+                            _parentMeasurement._parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentMeasurement._parentChannel._parentPNAX.Timeout);
+                            _magnitude = (double)_parentMeasurement._parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+
+                            return _magnitude;
+                        }
+                        private void SetMagnitude(double Magnitude)
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _magnitude = Magnitude;
+
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:OFFset:MAGNitude {1}", _parentMeasurement._parentChannel.Number, _magnitude));
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+                        }
+                        private double GetPhase()
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _parentMeasurement._parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:OFFset:PHASe?", _parentMeasurement._parentChannel.Number));
+                            _parentMeasurement._parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentMeasurement._parentChannel._parentPNAX.Timeout);
+                            _phase = (double)_parentMeasurement._parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+
+                            return _phase;
+                        }
+                        private void SetPhase(double Phase)
+                        {
+
+                            if (Phase < -360 || 360 < Phase)
+                                throw new System.ArgumentException("Phase must be between -360 and 360.", "Phase");
+
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _phase = Phase;
+
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:OFFset:PHASe {1}", _parentMeasurement._parentChannel.Number, _phase));
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+                        }
+                        private double GetSlope()
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _parentMeasurement._parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:OFFset:SLOPe?", _parentMeasurement._parentChannel.Number));
+                            _parentMeasurement._parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentMeasurement._parentChannel._parentPNAX.Timeout);
+                            _slope = (double)_parentMeasurement._parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+
+                            return _slope;
+                        }
+                        private void SetSlope(double Slope)
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _slope = Slope;
+
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:OFFset:SLOPe {1}", _parentMeasurement._parentChannel.Number, _slope));
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+                        }
+
+                    }
+                    public class SmoothingClass {
+
+                        // Variables
+                        private MeasurementClass _parentMeasurement;
+                        private double _aperture;
+                        private int _points;
+                        private bool _state;
+
+                        // Properties
+                        /// <summary>
+                        /// Amount of smoothing as a percentage of the number of data points in the channel.
+                        /// Must be between 1 and 25.
+                        /// </summary>
+                        public double Aperture
+                        {
+                            get { return this.GetAperture(); }
+                            set { this.SetAperture(value); }
+                        }
+                        /// <summary>
+                        /// Number of adjacent data points to average.
+                        /// </summary>
+                        public int Points
+                        {
+                            get { return this.GetPoints(); }
+                            set { this.SetPoints(value); }
+                        }
+                        /// <summary>
+                        /// Turns smoothing on and off.
+                        /// </summary>
+                        public bool State
+                        {
+                            get { return this.GetState(); }
+                            set { this.SetState(value); }
+                        }
+
+                        // Constructor
+                        internal SmoothingClass(MeasurementClass ParentMeasurement)
+                        {
+                            _parentMeasurement = ParentMeasurement;
+                        }
+
+                        // Private Methods
+                        private double GetAperture()
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _parentMeasurement._parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:SMOothing:APERture?", _parentMeasurement._parentChannel.Number));
+                            _parentMeasurement._parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentMeasurement._parentChannel._parentPNAX.Timeout);
+                            _aperture = (double)_parentMeasurement._parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+
+                            return _aperture;
+                        }
+                        private void SetAperture(double Aperture)
+                        {
+                            if (Aperture < 1 || 25 < Aperture)
+                                throw new System.ArgumentException("Aperture must be between 1 and 25 percent.", "Aperture");
+
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _aperture = Aperture;
+
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:SMOothing:APERture {1}", _parentMeasurement._parentChannel.Number, _aperture));
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+                        }
+                        private int GetPoints()
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _parentMeasurement._parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:SMOothing:POINts?", _parentMeasurement._parentChannel.Number));
+                            _parentMeasurement._parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentMeasurement._parentChannel._parentPNAX.Timeout);
+                            _points = (int)_parentMeasurement._parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+
+                            return _points;
+                        }
+                        private void SetPoints(int Points)
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                           _points = Points;
+
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:SMOothing:POINts {1}", _parentMeasurement._parentChannel.Number, _points));
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+                        }
+                        private bool GetState()
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _parentMeasurement._parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:SMOothing:STATe?", _parentMeasurement._parentChannel.Number));
+                            _parentMeasurement._parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentMeasurement._parentChannel._parentPNAX.Timeout);
+                            _state = (((byte)_parentMeasurement._parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+
+                            return _state;
+                        }
+                        private void SetState(bool State)
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _state = State;
+
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:SMOothing:STATe {1}", _parentMeasurement._parentChannel.Number, _state ? "ON" : "OFF"));
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+                        }
+
+                    }
+                    public class TraceHoldClass {
+
+                        // Variables
+                        private MeasurementClass _parentMeasurement;
+                        private TraceHoldTypeEnum _type;
+
+                        // Properties
+                        /// <summary>
+                        /// The type of trace hold to perform.
+                        /// </summary>
+                        public TraceHoldTypeEnum Type
+                        {
+                            get { return this.GetType(); }
+                            set { this.SetType(value); }
+                        }
+
+                        // Constructor
+                        internal TraceHoldClass(MeasurementClass ParentMeasurement)
+                        {
+                            _parentMeasurement = ParentMeasurement;
+                        }
+
+                        // Private Methods
+                        private TraceHoldTypeEnum GetType()
+                        {
+                            string retVal;
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _parentMeasurement._parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:HOLD:TYPE?", _parentMeasurement._parentChannel.Number));
+                            _parentMeasurement._parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentMeasurement._parentChannel._parentPNAX.Timeout);
+                            retVal = _parentMeasurement._parentChannel._parentPNAX.ReadString();
+
+                            if (retVal.Contains("OFF")) {
+                                _type = TraceHoldTypeEnum.Off;
+                            } else if (retVal.Contains("MINimum")) {
+                                _type = TraceHoldTypeEnum.Minimum;
+                            } else {
+                                _type = TraceHoldTypeEnum.Maximum;
+                            }
+
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+
+                            return _type;
+                        }
+                        private void SetType(TraceHoldTypeEnum Type)
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _type = Type;
+                            switch (_type) {
+                                case TraceHoldTypeEnum.Off:
+                                    _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:HOLD:TYPE OFF", _parentMeasurement._parentChannel.Number));
+                                    break;
+                                case TraceHoldTypeEnum.Minimum:
+                                    _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:HOLD:TYPE MINimum", _parentMeasurement._parentChannel.Number));
+                                    break;
+                                case TraceHoldTypeEnum.Maximum:
+                                    _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:HOLD:TYPE MAXimum", _parentMeasurement._parentChannel.Number));
+                                    break;
+                            }
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+                        }
+
+                        // Public Methods
+                        /// <summary>
+                        /// Resets the currently stored data points to the live data trace and restarts the currently-selected Trace Hold Type.
+                        /// </summary>
+                        public void Clear()
+                        {
+                            string selectedName = _parentMeasurement._parentChannel.Measurements.SelectedMeasurementName;
+                            _parentMeasurement.Select();
+
+                            _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:HOLD:CLEar", _parentMeasurement._parentChannel.Number));
+
+                            if (!String.IsNullOrWhiteSpace(selectedName)) {
+                                _parentMeasurement._parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentMeasurement._parentChannel.Number, selectedName));
+                            }
+                        }
+                    }
 
                     // Variables
                     private ChannelClass _parentChannel;
-                    private double _start;
-                    private double _stop;
-                    private double _span;
-                    private double _center;
-                    private double _minimumStart;
-                    private double _maximumStart;
-                    private double _minimumStop;
-                    private double _maximumStop;
-                    private double _minimumSpan;
-                    private double _maximumSpan;
-                    private double _minimumCenter;
-                    private double _maximumCenter;
+                    private string _type;
+                    private MeasurementFormatEnum _format;
 
                     // Properties
-                    public double Start
+                    /// <summary>
+                    /// The measurement name. Cannot be changed after the measurement is created.
+                    /// </summary>
+                    public string Name
+                    { get; private set; }
+                    /// <summary>
+                    /// The measurement type.
+                    /// </summary>
+                    public string Type
                     {
-                        get { return this.GetStart(); }
-                        set { this.SetStart(value); }
+                        get { return this._type; }
+                        set { this.SetType(value); }
                     }
-                    public double Stop
+                    /// <summary>
+                    /// Format of the specified measurement
+                    /// </summary>
+                    public MeasurementFormatEnum Format
                     {
-                        get { return this.GetStop(); }
-                        set { this.SetStop(value); }
+                        get { return this.GetFormat(); }
+                        set { this.SetFormat(value); }
                     }
-                    public double Span
-                    {
-                        get { return this.GetSpan(); }
-                        set { this.SetSpan(value); }
-                    }
-                    public double Center
-                    {
-                        get { return this.GetCenter(); }
-                        set { this.SetCenter(value); }
-                    }
-                    public double MinimumStart
-                    {
-                        get { return this.GetMinimumStart(); }
-                    }
-                    public double MaximumStart
-                    {
-                        get { return this.GetMaximumStart(); }
-                    }
-                    public double MinimumStop
-                    {
-                        get { return this.GetMinimumStop(); }
-                    }
-                    public double MaximumStop
-                    {
-                        get { return this.GetMaximumStop(); }
-                    }
-                    public double MinimumSpan
-                    {
-                        get { return this.GetMinimumSpan(); }
-                    }
-                    public double MaximumSpan
-                    {
-                        get { return this.GetMaximumSpan(); }
-                    }
-                    public double MinimumCenter
-                    {
-                        get { return this.GetMinimumCenter(); }
-                    }
-                    public double MaximumCenter
-                    {
-                        get { return this.GetMaximumCenter(); }
-                    }
-                    public double[] Values
-                    {
-                        get { return this.GetValues(); }
-                    }
+                    public OffsetClass Offset
+                    { get; private set; }
+                    public SmoothingClass Smoothing
+                    { get; private set; }
+                    public TraceHoldClass Hold
+                    { get; private set; }
+                    /// <summary>
+                    /// The trace that this measurement is attached to.
+                    /// null if this measurement has not been attached to a trace.
+                    /// </summary>
+                    public PNAX.WindowClass.TraceClass AttachedTrace
+                    { get; internal set; }
 
                     // Constructor
-                    internal FrequencyClass(ChannelClass ParentChannel)
+                    internal MeasurementClass(string Name, string Type, ChannelClass ParentChannel)
                     {
+                        this.Name = Name;
+                        _type = Type;
                         _parentChannel = ParentChannel;
+
+                        Offset = new OffsetClass(this);
+                        Smoothing = new SmoothingClass(this);
+                        Hold = new TraceHoldClass(this);
+                        AttachedTrace = null;
                     }
 
-                    // Protected Methods
-                    protected virtual double GetStart()
+                    // Private Methods
+                    private void SetType(string Type)
                     {
+                        // TO DO: Check that Type exists for the measurement application type.
+                        _type = Type;
+
+                        // TO DO: Allow modifying for different measurement application types.
+                        string selectedName = _parentChannel.Measurements.SelectedMeasurementName;
+                        Select();
+                        _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:MODify:EXTended {1}", _parentChannel.Number, _type));
+                        if (!String.IsNullOrWhiteSpace(selectedName)) {
+                            _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentChannel.Number, selectedName));
+                        }
+
+                    }
+                    private MeasurementFormatEnum GetFormat()
+                    {
+                        string retVal;
+                        string selectedName = _parentChannel.Measurements.SelectedMeasurementName;
+                        Select();
+
                         _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STARt?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat?", _parentChannel.Number));
                         _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _start = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _start;
+                        retVal = _parentChannel._parentPNAX.ReadString();
+
+                        if (retVal.Contains("MLIN")) { _format = MeasurementFormatEnum.Linear; }
+                        else if (retVal.Contains("MLOG")) { _format = MeasurementFormatEnum.Logarithmic; }
+                        else if (retVal.Contains("PHAS")) { _format = MeasurementFormatEnum.Phase; }
+                        else if (retVal.Contains("UPH")) { _format = MeasurementFormatEnum.UnwrappedPhase; }
+                        else if (retVal.Contains("IMAG")) { _format = MeasurementFormatEnum.Imaginary; }
+                        else if (retVal.Contains("REAL")) { _format = MeasurementFormatEnum.Real; }
+                        else if (retVal.Contains("POL")) { _format = MeasurementFormatEnum.Polar; }
+                        else if (retVal.Contains("SMIT")) { _format = MeasurementFormatEnum.Smith; }
+                        else if (retVal.Contains("SADM")) { _format = MeasurementFormatEnum.SmithAdmittance; }
+                        else if (retVal.Contains("SWR")) { _format = MeasurementFormatEnum.SWR; }
+                        else if (retVal.Contains("GDEL")) { _format = MeasurementFormatEnum.GroupDelay; }
+                        else if (retVal.Contains("KELV")) { _format = MeasurementFormatEnum.Kelvin; }
+                        else if (retVal.Contains("FAHR")) { _format = MeasurementFormatEnum.Fahrenheit; }
+                        else { _format = MeasurementFormatEnum.Celsius; }
+
+                        if (!String.IsNullOrWhiteSpace(selectedName)) {
+                            _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentChannel.Number, selectedName));
+                        }
+
+                        return _format;
                     }
-                    protected virtual void SetStart(double Start)
+                    private void SetFormat(MeasurementFormatEnum Format)
                     {
-                        _start = Start;
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STARt {1}", _parentChannel.Number, _start));
+                        _format = Format;
+
+                        string selectedName = _parentChannel.Measurements.SelectedMeasurementName;
+                        Select();
+
+                        switch (_format) {
+                            case MeasurementFormatEnum.Linear:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat MLINear", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Logarithmic:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat MLOGarithmic", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Phase:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat PHASe", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.UnwrappedPhase:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat UPHase", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Imaginary:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat IMAGinary", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Real:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat REAL", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Polar:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat POLar", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Smith:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat SMITh", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.SmithAdmittance:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat SADMittance", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.SWR:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat SWR", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.GroupDelay:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat GDELay", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Kelvin:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat KELVin", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Fahrenheit:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat FAHRenheit", _parentChannel.Number));
+                                break;
+                            case MeasurementFormatEnum.Celsius:
+                                _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat CELSius", _parentChannel.Number));
+                                break;
+                        }
+
+                        if (!String.IsNullOrWhiteSpace(selectedName)) {
+                            _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentChannel.Number, selectedName));
+                        }
+
                     }
-                    protected virtual double GetStop()
+                    
+                    // Public Methods
+                    public void Select()
                     {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STOP?", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _stop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _stop;
-                    }
-                    protected virtual void SetStop(double Stop)
-                    {
-                        _stop = Stop;
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STOP {1}", _parentChannel.Number, _stop));
-                    }
-                    protected virtual double GetSpan()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:SPAN?", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _span = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _span;
-                    }
-                    protected virtual void SetSpan(double Span)
-                    {
-                        _span = Span;
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:SPAN {1}", _parentChannel.Number, _span));
-                    }
-                    protected virtual double GetCenter()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CENTer?", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _center = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _center;
-                    }
-                    protected virtual void SetCenter(double Center)
-                    {
-                        _center = Center;
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CENTer {1}", _parentChannel.Number, _center));
-                    }
-                    protected virtual double GetMinimumStart()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STARt? MINimum", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _minimumStart = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _minimumStart;
-                    }
-                    protected virtual double GetMaximumStart()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STARt? MAXimum", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _maximumStart = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _maximumStart;
-                    }
-                    protected virtual double GetMinimumStop()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STOP? MINimum", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _minimumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _minimumStop;
-                    }
-                    protected virtual double GetMaximumStop()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STOP? MAXimum", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _maximumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _maximumStop;
-                    }
-                    protected virtual double GetMinimumSpan()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:SPAN? MINimum", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _minimumSpan = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _minimumSpan;
-                    }
-                    protected virtual double GetMaximumSpan()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:SPAN? MAXimum", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _maximumSpan = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _maximumSpan;
-                    }
-                    protected virtual double GetMinimumCenter()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CENTer? MINimum", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _minimumCenter = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _minimumCenter;
-                    }
-                    protected virtual double GetMaximumCenter()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CENTer? MAXimum", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _maximumCenter = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _maximumCenter;
-                    }
-                    protected virtual double[] GetValues()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:X:VALues?", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        return (double[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_R8, ",");
+                        _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentChannel.Number, Name));
                     }
 
                 }
-                public class NoiseAveragingClass {
+                public class MeasurementCollectionClass : IEnumerable<MeasurementClass> {
 
                     // Variables
                     private ChannelClass _parentChannel;
-                    private bool _enabled;
-                    private int _count;
+                    private Dictionary<string, MeasurementClass> _measurements;
 
                     // Properties
-                    public bool Enabled
-                    {
-                        get { return this.GetEnabled(); }
-                        set { this.SetEnabled(value); }
-                    }
+                    /// <summary>
+                    /// Number of measurements managed by this driver.
+                    /// </summary>
                     public int Count
                     {
-                        get { return this.GetCount(); }
-                        set { this.SetCount(value); }
+                        get { return this._measurements.Count(); }
+                    }
+                    /// <summary>
+                    /// Measurement names of the managed measurements.
+                    /// </summary>
+                    public string[] ManagedMeasurementNames
+                    {
+                        get { return this._measurements.Keys.ToArray(); }
+                    }
+                    /// <summary>
+                    /// Measurement names on the channel, not necessarily managed by this driver.
+                    /// </summary>
+                    public string[] OpenMeasurementNames
+                    {
+                        get { return this.GetOpenMeasurementNames(); }
+                    }
+                    /// <summary>
+                    /// The name of the currently selected measurement on the channel.
+                    /// </summary>
+                    public string SelectedMeasurementName
+                    {
+                        get { return this.GetSelectedMeasurementName(); }
                     }
 
                     // Constructor
-                    internal NoiseAveragingClass(ChannelClass ParentChannel)
+                    internal MeasurementCollectionClass(ChannelClass ParentChannel)
                     {
                         _parentChannel = ParentChannel;
                     }
 
-                    // Protected Methods
-                    protected virtual bool GetEnabled()
+                    // Indexer
+                    public MeasurementClass this[string Name]
                     {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:NOISe:AVERage:STATe?", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _enabled = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                        return _enabled;
-                    }
-                    protected virtual void SetEnabled(bool Enabled)
-                    {
-                        _enabled = Enabled;
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:NOISe:AVERage:STATe {1}", _parentChannel.Number, _enabled ? "ON" : "OFF"));
-                    }
-                    protected virtual int GetCount()
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:NOISe:AVERage:COUNt?", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        _count = (int)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
-                        return _count;
-                    }
-                    protected virtual void SetCount(int Count)
-                    {
-                        if (!(0 < Count && Count < 100))
-                            throw new System.ArgumentException("Noise Averaging Count must be greater than 0 and less than 100");
+                        get
+                        {
+                            if (!_measurements.ContainsKey(Name))
+                                throw new System.IndexOutOfRangeException("Measurement name does not exist.");
 
-                        _count = Count;
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:NOISe:AVERage:COUNt {1}", _parentChannel.Number, _count));
+                            return _measurements[Name];
+                        }
+                    }
+
+                    // Private Methods
+                    private string[] GetOpenMeasurementNames()
+                    {
+                        int[] retVal;
+                        List<string> measurementNames = new List<string>();
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SYSTem:MEASurement:CATalog? {0}", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        retVal = (int[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
+                        for (int i = 0; i < retVal.Length; i++) {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SYSTem:MEASurement{0}:NAME?", retVal[i]));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            measurementNames.Add(_parentChannel._parentPNAX.ReadString());
+                        }
+                        return measurementNames.ToArray();
+                    }
+                    private string GetSelectedMeasurementName()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        return _parentChannel._parentPNAX.ReadString();
+                    }
+
+                    // Public Methods
+                    /// <summary>
+                    /// Creates a measurement with the specified name and type.
+                    /// </summary>
+                    /// <returns>True if the measurement is created successfully. False if the measurement name already exists or the type isn't supported </returns>
+                    public bool Add(string Name, string Type)
+                    {
+                        if (_measurements.ContainsKey(Name))
+                            return false;
+
+                        // TO DO: Support all measurement application types (i.e. NoiseFigure, GainCompression, etc.)
+                        // TO DO: Check that Type is allowed by the measurement application type
+
+                        // Create Basic S-Par measurement
+                        _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:DEFine:EXTended {1}, {2}", _parentChannel.Number, Name, Type));
+                        _measurements.Add(Name, new MeasurementClass(Name, Type, _parentChannel));
+
+                        return true;
+                    }
+                    /// <summary>
+                    /// Deletes the measurement with the specified name from the channel.
+                    /// If the measurement is attached to a trace, that trace is also deleted.
+                    /// </summary>
+                    /// <returns>True if deleted successfully. False if the measurement doesn't exist.</returns>
+                    public bool Delete(string Name)
+                    {
+                        if (_measurements.ContainsKey(Name)) {
+                            _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:DELete:NAME {1}", _parentChannel.Number, Name));
+                            if (_measurements[Name].AttachedTrace != null) {
+                                _parentChannel._parentPNAX.Windows[_measurements[Name].AttachedTrace._parentWindow.Number].Traces.Delete(_measurements[Name].AttachedTrace.Number);
+                            }
+                            _measurements.Remove(Name);
+                            return true;
+                        } else if (OpenMeasurementNames.Contains(Name)) {
+                            _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:DELete:NAME {1}", _parentChannel.Number, Name));
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    /// <summary>
+                    /// Iterates through all open measurement names and deletes all measurements on the channel.
+                    /// If the measurements are attached to a trace, those traces are also deleted.
+                    /// </summary>
+                    public void DeleteAll()
+                    {
+                        List<string> allNames = new List<string>(OpenMeasurementNames);
+                        foreach (string name in allNames) {
+                            _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:DELete:NAME {1}", _parentChannel.Number, name));
+                            if (_measurements.ContainsKey(name) && _measurements[name].AttachedTrace != null) {
+                                _parentChannel._parentPNAX.Windows[_measurements[name].AttachedTrace._parentWindow.Number].Traces.Delete(_measurements[name].AttachedTrace.Number);
+                            }
+                        }
+                        _measurements.Clear();
+                    }
+                    public IEnumerator<MeasurementClass> GetEnumerator()
+                    {
+                        return _measurements.Values.GetEnumerator();
+                    }
+
+                    // Unused Interface Methods
+                    IEnumerator IEnumerable.GetEnumerator()
+                    {
+                        throw new NotImplementedException();
                     }
 
                 }
 
                 // Variables
-                protected PNAX _parentPNAX;
-                protected MeasurementClassEnum _measurementClass;
-                protected Dictionary<string, string> _measurements;
-                protected double _ifBandwidth;
-                internal bool _mappedToWindow;
-                internal int _mappedWindowNumber;
+                private PNAX _parentPNAX;
 
                 // Properties
+                /// <summary>
+                /// Channel number of this channel.
+                /// </summary>
                 public int Number
                 { get; private set; }
-                public MeasurementClassEnum MeasurementClass
-                {
-                    get { return this.GetMeasurementClass(); }
-                    set { this.SetMeasurementClass(value); }
-                }
-                public string[] MeasurementNames
-                {
-                    get { return _measurements.Keys.ToArray(); }
-                }
-                public double IFBandwidth
-                {
-                    get { return this.GetIFBandwidth(); }
-                    set { this.SetIFBandwidth(value); }
-                }
-                public bool MappedToWindow
-                {
-                    get { return this._mappedToWindow; }
-                }
-                public int MappedWindowNumber
-                {
-                    get { return this._mappedWindowNumber; }
-                }
-
-                // Constructor
-                internal ChannelClass(PNAX ParentPNAX, int Number)
-                {
-                    _parentPNAX = ParentPNAX;
-                    this.Number = Number;
-                    _measurements = new Dictionary<string, string>();
-                    _mappedToWindow = false;
-                    _mappedWindowNumber = -1;
-                }
-
-                // Protected Methods
-                protected virtual MeasurementClassEnum GetMeasurementClass()
-                {
-                    return _measurementClass;
-                }
-                protected virtual bool SetMeasurementClass(MeasurementClassEnum MeasurementClass)
-                {
-                    if (_measurements.Count != 0) {
-                        return false;
-                    }
-                    _measurementClass = MeasurementClass;
-                    return true;
-                }
-                protected virtual double GetIFBandwidth()
-                {
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString(String.Format("SENSe{0}:BANDwidth:RESolution?", Number));
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    _ifBandwidth = (double)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                    return _ifBandwidth;
-                }
-                protected virtual void SetIFBandwidth(double IFBandwidth)
-                {
-                    _ifBandwidth = IFBandwidth;
-                    _parentPNAX.WriteString(String.Format("SENSe{0}:BANDwidth:RESolution {1}", Number, _ifBandwidth));
-                }
-
-                // Public Methods
-                public abstract bool AddMeasurement(string MeasurementName, string MeasurementType, MeasurementFormatEnum MeasurementFormat = MeasurementFormatEnum.Logarithmic);
-                public virtual bool SetMeasurementFormat(string MeasurementName, MeasurementFormatEnum MeasurementFormat)
-                {
-                    if (!_measurements.ContainsKey(MeasurementName))
-                        return false;
-
-                    _parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", Number, MeasurementName));
-
-                    switch (MeasurementFormat) {
-                        case MeasurementFormatEnum.Linear:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat MLINear", Number));
-                            break;
-                        case MeasurementFormatEnum.Logarithmic:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat MLOGarithmic", Number));
-                            break;
-                        case MeasurementFormatEnum.Phase:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat PHASe", Number));
-                            break;
-                        case MeasurementFormatEnum.UnwrappedPhase:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat UPHase", Number));
-                            break;
-                        case MeasurementFormatEnum.Imaginary:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat IMAGinary", Number));
-                            break;
-                        case MeasurementFormatEnum.Real:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat REAL", Number));
-                            break;
-                        case MeasurementFormatEnum.Polar:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat POLar", Number));
-                            break;
-                        case MeasurementFormatEnum.Smith:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat SMITh", Number));
-                            break;
-                        case MeasurementFormatEnum.SmithAdmittance:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat SADMittance", Number));
-                            break;
-                        case MeasurementFormatEnum.SWR:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:FORMat SWR", Number));
-                            break;
-                    }
-
-                    return true;
-                }
-                public virtual bool DeleteMeasurement(string MeasurementName)
-                {
-                    if (!_measurements.ContainsKey(MeasurementName)) {
-                        return false;
-                    }
-
-                    _parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:DELete:NAME {1}", Number, MeasurementName));
-
-                    _measurements.Remove(MeasurementName);
-                    return true;
-                }
-                public virtual bool GetMeasurementData(string MeasurementName, out double[] Data, DataAccessMapEnum DataAccessMap = DataAccessMapEnum.FDATA)
-                {
-
-                    if (!_measurements.Keys.Contains(MeasurementName)) {
-                        Data = new double[] { };
-                        return false;
-                    }
-
-                    _parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", Number, MeasurementName));
-                    _parentPNAX.ClearEventRegisters();
-                    switch (DataAccessMap) {
-                        case DataAccessMapEnum.FDATA:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:DATA? FDATA", Number));
-                            break;
-                        case DataAccessMapEnum.RDATA:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:DATA? RDATA", Number));
-                            break;
-                        case DataAccessMapEnum.SDATA:
-                            _parentPNAX.WriteString(String.Format("CALCulate{0}:DATA? SDATA", Number));
-                            break;
-                        default:
-                            break;
-                    }
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-
-                    Data = (double[])_parentPNAX.ReadIEEEBlock(IEEEBinaryType.BinaryType_R8, false, true);
-
-                    return true;
-                }
-
-            }
-            public class SParameterChannelClass : ChannelClass {
-
-                // Properties
+                /// <summary>
+                /// Control averaging on this channel.
+                /// </summary>
                 public AveragingClass Averaging
                 { get; private set; }
-                public FrequencyClass Frequency
+                /// <summary>
+                /// Control measurements on this channel.
+                /// </summary>
+                public MeasurementCollectionClass Measurements
                 { get; private set; }
-                public string[] AllowedMeasurementTypes
-                {
-                    get { return this.GetAllowedMeasurementTypes(); }
-                }
 
                 // Constructor
-                internal SParameterChannelClass(PNAX ParentPNAX, int Number)
-                    : base(ParentPNAX, Number)
+                internal ChannelClass(int Number, PNAX ParentPNAX)
                 {
-                    _measurementClass = MeasurementClassEnum.SParameters;
+                    this.Number = Number;
+                    _parentPNAX = ParentPNAX;
+
+                    Averaging = new AveragingClass(this);
+                    Measurements = new MeasurementCollectionClass(this);
                 }
 
-                // Protected Methods
-                protected virtual string[] GetAllowedMeasurementTypes()
-                {
-                    List<string> allowedMeasurementTypes = new List<string>();
-                    List<int> portNums = new List<int>();
-                    string[] retStrings;
+                // Private Methods
 
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString("SOURce:CATalog?");
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    retStrings = _parentPNAX.ReadString().Split(new string[] { ",", "\"", "\n", "Port" }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string port in retStrings) {
-                        if (!port.Contains("Src")) {
-                            portNums.Add(int.Parse(port));
-                        }
-                    }
-
-                    portNums = portNums.Distinct().ToList();
-
-                    for (int i = 0; i < portNums.Count; i++) {
-                        for (int j = 0; j < portNums.Count; j++) {
-                            allowedMeasurementTypes.Add(String.Format("S{0}_{1}", portNums[i], portNums[j]));
-                        }
-                    }
-
-                    return allowedMeasurementTypes.ToArray();
-                }
 
                 // Public Methods
-                public override bool AddMeasurement(string MeasurementName, string MeasurementType, MeasurementFormatEnum MeasurementFormat = MeasurementFormatEnum.Logarithmic)
-                {
-                    if (_measurements.ContainsKey(MeasurementName))
-                        return false;
 
-                    if (!AllowedMeasurementTypes.Contains(MeasurementType))
-                        return false;
-
-                    _measurements.Add(MeasurementName, MeasurementType);
-                    _parentPNAX.WriteString(String.Format("CALCulate{0}:PARamater:DEFine:EXTended {1}, {2}", Number, MeasurementName, MeasurementType));
-                    SetMeasurementFormat(MeasurementName, MeasurementFormat);
-
-                    return true;
-                }
             }
-            public class ChannelCollectionClass {
+            public class ChannelCollectionClass : IEnumerable<ChannelClass> {
 
                 // Variables
                 private PNAX _parentPNAX;
@@ -776,106 +1362,147 @@ namespace SCPI {
 
                 // Properties
                 /// <summary>
-                /// The channel numbers used by the PNAX, not necessarily created using this driver
+                /// Number of channels managed by this driver.
+                /// </summary>
+                public int Count
+                {
+                    get { return this._channels.Count; }
+                }
+                /// <summary>
+                /// Channel Numbers managed by this driver.
+                /// </summary>
+                public int[] ManagedChannelNumbers
+                {
+                    get { return this._channels.Keys.ToArray(); }
+                }
+                /// <summary>
+                /// All open channel numbers on the PNAX. Not all channels are necessarily managed by this driver.
+                /// i.e. If a channel was created locally using the front panel, this driver does not manage its use.
                 /// </summary>
                 public int[] OpenChannelNumbers
                 {
                     get { return this.GetOpenChannelNumbers(); }
                 }
                 /// <summary>
-                /// The channel numbers managed by this driver instance. There may or may not be more channels on the PNAX created in local mode that are not managed here.
+                /// Gets the channel number of the active channel.  If no channel is active, returns 0.
                 /// </summary>
-                public int[] ManagedChannelNumbers
+                public int ActiveChannelNumber
                 {
-                    get { return this._channels.Keys.ToArray(); }
+                    get { return this.GetActiveChannelNumber(); }
+                }
+                /// <summary>
+                /// The name of the active measurement. If no measurement is active, returns an empty string.
+                /// </summary>
+                public string ActiveMeasurementName
+                {
+                    get { return this.GetActiveMeasurementName(); }
                 }
 
                 // Constructor
                 internal ChannelCollectionClass(PNAX ParentPNAX)
                 {
                     _parentPNAX = ParentPNAX;
-                    _channels = new Dictionary<int, ChannelClass>();
                 }
 
                 // Indexer
-                /// <summary>
-                /// Access the channel by the Channel Number. Using the Measurement class, cast the returned channel to the appropriate type.
-                /// </summary>
-                /// <param name="ChannelNumber">Channel number trying to access (lowest is 1)</param>
-                /// <returns>The channel given by the channel number.</returns>
-                public ChannelClass this[int ChannelNumber]
+                public ChannelClass this[int Number]
                 {
                     get
                     {
-                        if (!_channels.ContainsKey(ChannelNumber))
-                            throw new System.ArgumentException("Channel does not exist", "ChannelNumber");
+                        if (!_channels.ContainsKey(Number))
+                            throw new System.IndexOutOfRangeException("Channel does not exist at this number.");
 
-                        return _channels[ChannelNumber];
+                        return _channels[Number];
                     }
                 }
 
-                // Protected Methods
-                protected virtual int[] GetOpenChannelNumbers()
+                // Private Methods
+                private int[] GetOpenChannelNumbers()
                 {
-                    List<int> channels = new List<int>();
-                    string[] retVals;
-
                     _parentPNAX.ClearEventRegisters();
                     _parentPNAX.WriteString("SYSTem:CHANnels:CATalog?");
                     _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    retVals = _parentPNAX.ReadString().Split(new char[] { '"', ',', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    foreach (string channelNumber in retVals) {
-                        channels.Add(int.Parse(channelNumber));
-                    }
-
-                    channels.Sort();
-
-                    return channels.ToArray();
+                    return (int[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
+                }
+                private int GetActiveChannelNumber()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:ACTive:CHANnel?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    return (int)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                }
+                private string GetActiveMeasurementName()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:ACTive:MEASurement?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    return _parentPNAX.ReadString();
                 }
 
                 // Public Methods
-                public int Add(MeasurementClassEnum MeasurementClass)
+                /// <summary>
+                /// Adds a new channel with the next available channel number.
+                /// </summary>
+                /// <returns>
+                /// The channel number of the newly created channel.
+                /// Returns -1, if the maximum number of channels is reached.
+                /// </returns>
+                public int Add()
                 {
-                    int firstOpenChannelNumber = 1;
-                    List<int> currentChannelNumbers = new List<int>(OpenChannelNumbers);
-                    currentChannelNumbers.AddRange(_channels.Keys);
+                    int availableChannelNumber = 1;
+                    int[] openChannelNumbers = OpenChannelNumbers;
 
-                    currentChannelNumbers = currentChannelNumbers.Distinct().ToList();
-                    currentChannelNumbers.Sort();
+                    if (openChannelNumbers.Length == _parentPNAX.Capabilities.MaximumChannels)
+                        return -1;
 
-                    for (int i = 0; i < currentChannelNumbers.Count; i++) {
-                        if ((i + 1) != currentChannelNumbers[i]) {
-                            firstOpenChannelNumber = i + 1;
+                    for (int i = 0; i < openChannelNumbers.Length; i++) {
+                        if (!openChannelNumbers.Contains(i + 1)) {
+                            availableChannelNumber = i + 1;
                             break;
                         }
                     }
 
-                    switch (MeasurementClass) {
-                        case MeasurementClassEnum.SParameters:
-                            _channels.Add(firstOpenChannelNumber, new SParameterChannelClass(_parentPNAX, firstOpenChannelNumber));
-                            break;
-                    }
+                    // TO DO: Add a new channel to the dictionary
 
-                    return firstOpenChannelNumber;
+                    return availableChannelNumber;
                 }
                 /// <summary>
-                /// Deletes the channel from the PNA and unmaps from the window (if mapped).
+                /// Deletes the specified channel number from the collection and destroys the channel on the PNAX.
                 /// </summary>
-                /// <param name="ChannelNumber">Channel number to delete.</param>
-                public void Delete(int ChannelNumber)
+                /// <returns>True if the channel is deleted. False if the specified channel number doesn't exist.</returns>
+                public bool Delete(int ChannelNumber)
                 {
                     if (_channels.ContainsKey(ChannelNumber)) {
-                        if (this[ChannelNumber]._mappedToWindow) {
-                            _parentPNAX.Windows[this[ChannelNumber]._mappedWindowNumber].UnMapChannel();
-                            this[ChannelNumber]._mappedToWindow = false;
-                            this[ChannelNumber]._mappedWindowNumber = -1;
-                        }
                         _parentPNAX.WriteString(String.Format("SYSTem:CHANnels:DELete {0}", ChannelNumber));
                         _channels.Remove(ChannelNumber);
+                        return true;
                     } else if (OpenChannelNumbers.Contains(ChannelNumber)) {
                         _parentPNAX.WriteString(String.Format("SYSTem:CHANnels:DELete {0}", ChannelNumber));
+                        return true;
+                    } else {
+                        return false;
                     }
+                }
+                /// <summary>
+                /// Iterates through all open channel numbers and deletes them.
+                /// </summary>
+                public void DeleteAll()
+                {
+                    List<int> allNumbers = new List<int>(OpenChannelNumbers);
+                    foreach (int number in allNumbers) {
+                        _parentPNAX.WriteString(String.Format("SYSTem:CHANnels:DELete {0}", number));
+                    }
+                    _channels.Clear();
+                }
+                public IEnumerator<ChannelClass> GetEnumerator()
+                {
+                    return _channels.Values.GetEnumerator();
+                }
+
+                // Unused Interface Methods
+                IEnumerator IEnumerable.GetEnumerator()
+                {
+                    throw new NotImplementedException();
                 }
 
             }
@@ -885,7 +1512,7 @@ namespace SCPI {
                 public class TraceClass {
 
                     // Variables
-                    private WindowClass _parentWindow;
+                    internal WindowClass _parentWindow;
                     private bool _memory;
                     private bool _display;
                     private string _title;
@@ -901,80 +1528,125 @@ namespace SCPI {
                     private int _maximumReferencePosition;
 
                     // Properties
+                    /// <summary>
+                    /// Number of the trace within the window. Not the measurement number on the PNAX display.
+                    /// </summary>
                     public int Number
                     { get; private set; }
-                    public string MeasurementName
+                    /// <summary>
+                    /// The measurement attached to this trace.
+                    /// </summary>
+                    public PNAX.ChannelClass.MeasurementClass AttachedMeasurement
                     { get; private set; }
+                    /// <summary>
+                    /// Enable or disable the memory trace.
+                    /// </summary>
                     public bool Memory
                     {
                         get { return this.GetMemory(); }
                         set { this.SetMemory(value); }
                     }
+                    /// <summary>
+                    /// Turn on or off the trace on the display.
+                    /// </summary>
                     public bool Display
                     {
                         get { return this.GetDisplay(); }
                         set { this.SetDisplay(value); }
                     }
+                    /// <summary>
+                    /// Title of the trace that shows up on the PNAX display.
+                    /// </summary>
                     public string Title
                     {
                         get { return this.GetTitle(); }
                         set { this.SetTitle(value); }
                     }
+                    /// <summary>
+                    /// Enable or disable the displaying of the title.
+                    /// </summary>
                     public bool TitleState
                     {
                         get { return this.GetTitleState(); }
                         set { this.SetTitleState(value); }
                     }
+                    /// <summary>
+                    /// Y Axis Per Division Value.
+                    /// </summary>
                     public double PerDivision
                     {
                         get { return this.GetPerDivision(); }
                         set { this.SetPerDivision(value); }
                     }
+                    /// <summary>
+                    /// Current minimum Y Axis Per Division Value
+                    /// </summary>
                     public double MinimumPerDivision
                     {
                         get { return this.GetMinimumPerDivision(); }
                     }
+                    /// <summary>
+                    /// Current maximum Y Axis Per Division Value
+                    /// </summary>
                     public double MaximumPerDivision
                     {
                         get { return this.GetMaximumPerDivision(); }
                     }
+                    /// <summary>
+                    /// Y Axis Reference Level
+                    /// </summary>
                     public double ReferenceLevel
                     {
                         get { return this.GetReferenceLevel(); }
                         set { this.SetReferenceLevel(value); }
                     }
+                    /// <summary>
+                    /// Current Minimum Y Axis Reference Level
+                    /// </summary>
                     public double MinimumReferenceLevel
                     {
                         get { return this.GetMinimumReferenceLevel(); }
                     }
+                    /// <summary>
+                    /// Current Maximum Y Axis Reference Level
+                    /// </summary>
                     public double MaximumReferenceLevel
                     {
                         get { return this.GetMaximumReferenceLevel(); }
                     }
+                    /// <summary>
+                    /// Y Axis Reference Position
+                    /// </summary>
                     public int ReferencePosition
                     {
                         get { return this.GetReferencePosition(); }
                         set { this.SetReferencePosition(value); }
                     }
+                    /// <summary>
+                    /// Current Minimum Y Axis Reference Position
+                    /// </summary>
                     public int MinimumReferencePosition
                     {
                         get { return this.GetMinimumReferencePosition(); }
                     }
+                    /// <summary>
+                    /// Current Maximum Y Axis Reference Position
+                    /// </summary>
                     public int MaximumReferencePosition
                     {
                         get { return this.GetMaximumReferencePosition(); }
                     }
 
                     // Constructor
-                    internal TraceClass(WindowClass ParentWindow, int Number, string MeasurementName)
+                    internal TraceClass(WindowClass ParentWindow, int Number, PNAX.ChannelClass.MeasurementClass AttachedMeasurment)
                     {
                         _parentWindow = ParentWindow;
                         this.Number = Number;
-                        this.MeasurementName = MeasurementName;
+                        this.AttachedMeasurement = AttachedMeasurement;
                     }
 
-                    // Protected Methods
-                    protected virtual bool GetMemory()
+                    // Private Methods
+                    private bool GetMemory()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:MEMory:STATe?", _parentWindow.Number, Number));
@@ -982,12 +1654,12 @@ namespace SCPI {
                         _memory = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
                         return _memory;
                     }
-                    protected virtual void SetMemory(bool Memory)
+                    private void SetMemory(bool Memory)
                     {
                         _memory = Memory;
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:MEMory:STATe {2}", _parentWindow.Number, Number, _memory ? "ON" : "OFF"));
                     }
-                    protected virtual bool GetDisplay()
+                    private bool GetDisplay()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:STATe?", _parentWindow.Number, Number));
@@ -995,12 +1667,12 @@ namespace SCPI {
                         _display = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
                         return _display;
                     }
-                    protected virtual void SetDisplay(bool Display)
+                    private void SetDisplay(bool Display)
                     {
                         _display = Display;
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:STATe {2}", _parentWindow.Number, Number, _display ? "ON" : "OFF"));
                     }
-                    protected virtual string GetTitle()
+                    private string GetTitle()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:DATA?", _parentWindow.Number, Number));
@@ -1008,12 +1680,12 @@ namespace SCPI {
                         _title = _parentWindow._parentPNAX.ReadString();
                         return _title;
                     }
-                    protected virtual void SetTitle(string Title)
+                    private void SetTitle(string Title)
                     {
                         _title = Title;
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:DATA {2}", _parentWindow.Number, Number, _title));
                     }
-                    protected virtual bool GetTitleState()
+                    private bool GetTitleState()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:STATe?", _parentWindow.Number, Number));
@@ -1021,12 +1693,12 @@ namespace SCPI {
                         _titleState = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
                         return _titleState;
                     }
-                    protected virtual void SetTitleState(bool TitleState)
+                    private void SetTitleState(bool TitleState)
                     {
                         _titleState = TitleState;
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:STATe {2}", _parentWindow.Number, Number, _titleState ? "ON" : "OFF"));
                     }
-                    protected virtual double GetPerDivision()
+                    private double GetPerDivision()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision?", _parentWindow.Number, Number));
@@ -1034,12 +1706,12 @@ namespace SCPI {
                         _perDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
                         return _perDivision;
                     }
-                    protected virtual void SetPerDivision(double PerDivision)
+                    private void SetPerDivision(double PerDivision)
                     {
                         _perDivision = PerDivision;
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision {2}", _parentWindow.Number, Number, _perDivision));
                     }
-                    protected virtual double GetMinimumPerDivision()
+                    private double GetMinimumPerDivision()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision? MINimum", _parentWindow.Number, Number));
@@ -1047,7 +1719,7 @@ namespace SCPI {
                         _minimumPerDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
                         return _minimumPerDivision;
                     }
-                    protected virtual double GetMaximumPerDivision()
+                    private double GetMaximumPerDivision()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision? MAXimum", _parentWindow.Number, Number));
@@ -1055,7 +1727,7 @@ namespace SCPI {
                         _maximumPerDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
                         return _maximumPerDivision;
                     }
-                    protected virtual double GetReferenceLevel()
+                    private double GetReferenceLevel()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel?", _parentWindow.Number, Number));
@@ -1063,12 +1735,12 @@ namespace SCPI {
                         _referenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
                         return _referenceLevel;
                     }
-                    protected virtual void SetReferenceLevel(double ReferenceLevel)
+                    private void SetReferenceLevel(double ReferenceLevel)
                     {
                         _referenceLevel = ReferenceLevel;
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel {2}", _parentWindow.Number, Number, _referenceLevel));
                     }
-                    protected virtual double GetMinimumReferenceLevel()
+                    private double GetMinimumReferenceLevel()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel? MINimum", _parentWindow.Number, Number));
@@ -1076,7 +1748,7 @@ namespace SCPI {
                         _minimumReferenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
                         return _minimumReferenceLevel;
                     }
-                    protected virtual double GetMaximumReferenceLevel()
+                    private double GetMaximumReferenceLevel()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel? MAXimum", _parentWindow.Number, Number));
@@ -1084,7 +1756,7 @@ namespace SCPI {
                         _maximumReferenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
                         return _maximumReferenceLevel;
                     }
-                    protected virtual int GetReferencePosition()
+                    private int GetReferencePosition()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition?", _parentWindow.Number, Number));
@@ -1092,12 +1764,12 @@ namespace SCPI {
                         _referencePosition = (int)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
                         return _referencePosition;
                     }
-                    protected virtual void SetReferencePosition(int ReferencePosition)
+                    private void SetReferencePosition(int ReferencePosition)
                     {
                         _referencePosition = ReferencePosition;
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition {2}", _parentWindow.Number, Number, _referencePosition));
                     }
-                    protected virtual int GetMinimumReferencePosition()
+                    private int GetMinimumReferencePosition()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition? MINimum", _parentWindow.Number, Number));
@@ -1105,7 +1777,7 @@ namespace SCPI {
                         _minimumReferencePosition = (int)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
                         return _minimumReferencePosition;
                     }
-                    protected virtual int GetMaximumReferencePosition()
+                    private int GetMaximumReferencePosition()
                     {
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition? MAXimum", _parentWindow.Number, Number));
@@ -1115,10 +1787,16 @@ namespace SCPI {
                     }
 
                     // Public Methods
+                    /// <summary>
+                    /// Select this trace as the active trace.
+                    /// </summary>
                     public void Select()
                     {
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:SELect", _parentWindow.Number, Number));
                     }
+                    /// <summary>
+                    /// Auto scale Y axis.
+                    /// </summary>
                     public void AutoScaleY()
                     {
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:AUTO", _parentWindow.Number, Number));
@@ -1132,13 +1810,27 @@ namespace SCPI {
                     private Dictionary<int, TraceClass> _traces;
 
                     // Properties
-                    public int[] OpenTraceNumbers
+                    /// <summary>
+                    /// Number of traces in this window managed by this driver.
+                    /// </summary>
+                    public int Count
                     {
-                        get { return this.GetOpenTraceNumbers(); }
+                        get { return _traces.Count; }
                     }
+                    /// <summary>
+                    /// Trace Numbers in this window managed by this driver.
+                    /// </summary>
                     public int[] ManagedTraceNumbers
                     {
                         get { return this._traces.Keys.ToArray(); }
+                    }
+                    /// <summary>
+                    /// All open trace numbers in the window in the PNAX. Not all traces are necessarily managed by this driver.
+                    /// i.e. If a trace was created locally using the front panel, this driver does not manage its use.
+                    /// </summary>
+                    public int[] OpenTraceNumbers
+                    {
+                        get { return this.GetOpenTraceNumbers(); }
                     }
 
                     // Constructor
@@ -1162,131 +1854,125 @@ namespace SCPI {
                     // Protected Methods
                     protected virtual int[] GetOpenTraceNumbers()
                     {
-                        List<int> traces = new List<int>();
-                        string[] retVals;
-
                         _parentWindow._parentPNAX.ClearEventRegisters();
                         _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:CATalog?", _parentWindow.Number));
                         _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        retVals = _parentWindow._parentPNAX.ReadString().Split(new char[] { '"', ',', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        return (int[])_parentWindow._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
 
-                        foreach (string traceNumber in retVals) {
-                            traces.Add(int.Parse(traceNumber));
-                        }
-
-                        traces.Sort();
-
-                        return traces.ToArray();
                     }
 
                     // Public Methods
-                    public int Add(string MeasurementName)
+                    /// <summary>
+                    /// Adds a new trace with the next available trace number and attaches the measurement.
+                    /// </summary>
+                    /// <returns>
+                    /// The trace number of the newly created trace.
+                    /// Returns -1, if the maximum number of traces is reached.
+                    /// </returns>
+                    public int Add(PNAX.ChannelClass.MeasurementClass AttachedMeasurement)
                     {
-                        int firstOpenTraceNumber = 1;
-                        List<int> currentTraceNumbers = new List<int>(OpenTraceNumbers);
-                        currentTraceNumbers.AddRange(_traces.Keys);
+                        int availableTraceNumber = 1;
+                        int[] openTraceNumbers = OpenTraceNumbers;
 
-                        currentTraceNumbers = currentTraceNumbers.Distinct().ToList();
-                        currentTraceNumbers.Sort();
+                        if (openTraceNumbers.Length == _parentWindow._parentPNAX.Capabilities.MaximumTracesPerWindow)
+                            return -1;
 
-                        for (int i = 0; i < currentTraceNumbers.Count; i++) {
-                            if ((i + 1) != currentTraceNumbers[i]) {
-                                firstOpenTraceNumber = i + 1;
+                        for (int i = 0; i < openTraceNumbers.Length; i++) {
+                            if (!openTraceNumbers.Contains(i + 1)) {
+                                availableTraceNumber = i + 1;
                                 break;
                             }
                         }
 
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:FEED {2}", _parentWindow.Number, firstOpenTraceNumber, MeasurementName));
-                        _traces.Add(firstOpenTraceNumber, new TraceClass(_parentWindow, firstOpenTraceNumber, MeasurementName));
+                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:FEED {2}", _parentWindow.Number, availableTraceNumber, AttachedMeasurement.Name));
+                        _traces.Add(availableTraceNumber, new TraceClass(_parentWindow, availableTraceNumber, AttachedMeasurement));
 
-                        return firstOpenTraceNumber;
+                        return availableTraceNumber;
                     }
-                    public void Delete(int TraceNumber)
+                    /// <summary>
+                    /// Deletes the specified trace from the collection and destroys the trace on the PNAX.
+                    /// </summary>
+                    /// <returns>True if the trace is deleted. False if the specified trace number doesn't exist.</returns>
+                    public bool Delete(int TraceNumber)
                     {
-                        if (_traces.ContainsKey(TraceNumber) || OpenTraceNumbers.Contains(TraceNumber)) {
+                        if (_traces.ContainsKey(TraceNumber)) {
                             _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, TraceNumber));
-                            if (_traces.ContainsKey(TraceNumber)) {
-                                _traces.Remove(TraceNumber);
-                            }
+                            _traces.Remove(TraceNumber);
+                            return true;
+                        } else if (OpenTraceNumbers.Contains(TraceNumber)) {
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, TraceNumber));
+                            return true;
+                        } else {
+                            return false;
                         }
+                    }
+                    /// <summary>
+                    /// Iterates through all open trace numbers and deletes them.
+                    /// </summary>
+                    public void DeleteAll()
+                    {
+                        List<int> allNumbers = new List<int>(OpenTraceNumbers);
+                        foreach (int number in allNumbers) {
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, number));
+                        }
+                        _traces.Clear();
                     }
 
                 }
-
+                
                 // Variables
                 private PNAX _parentPNAX;
-                private ChannelClass _mappedChannel;
-                private bool _enabled;
                 private bool _scaleCoupling;
                 private string _title;
                 private bool _titleState;
-
+                
                 // Properties
                 /// <summary>
-                /// Gets the number of this window.
+                /// Number of this window.
                 /// </summary>
                 public int Number
                 { get; private set; }
                 /// <summary>
-                /// Get the channel number of the mapped channel. If no channel is mapped, returns -1.
+                /// Enable or disable scale coupling for this window.
                 /// </summary>
-                public int MappedChannelNumber
-                {
-                    get
-                    {
-                        if (_mappedChannel != null)
-                            return _mappedChannel.Number;
-                        else
-                            return -1;
-                    }
-                }
-                public bool Enabled
-                {
-                    get { return this.GetEnabled(); }
-                    set { this.SetEnabled(value); }
-                }
                 public bool ScaleCoupling
                 {
                     get { return this.GetScaleCoupling(); }
                     set { this.SetScaleCoupling(value); }
                 }
+                /// <summary>
+                /// Title to be displayed in the window title area.
+                /// </summary>
                 public string Title
                 {
                     get { return this.GetTitle(); }
                     set { this.SetTitle(value); }
                 }
+                /// <summary>
+                /// Enable or disable displaying of the title.
+                /// </summary>
                 public bool TitleState
                 {
                     get { return this.GetTitleState(); }
                     set { this.SetTitleState(value); }
                 }
+                /// <summary>
+                /// Control Traces in this window.
+                /// </summary>
                 public TraceCollectionClass Traces
                 { get; private set; }
 
                 // Constructor
-                public WindowClass(PNAX ParentPNAX, int Number)
+                internal WindowClass(int Number, PNAX ParentPNAX)
                 {
-                    _parentPNAX = ParentPNAX;
                     this.Number = Number;
+                    _parentPNAX = ParentPNAX;
+
                     Traces = new TraceCollectionClass(this);
-                    _mappedChannel = null;
                 }
 
-                // Protected Methods
-                protected virtual bool GetEnabled()
-                {
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:ENABle?", Number));
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    _enabled = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                    return _enabled;
-                }
-                protected virtual void SetEnabled(bool Enabled)
-                {
-                    _enabled = Enabled;
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:ENABle {1}", Number, _enabled ? "ON" : "OFF"));
-                }
-                protected virtual bool GetScaleCoupling()
+                // Private Methods
+                private bool GetScaleCoupling()
                 {
                     _parentPNAX.ClearEventRegisters();
                     _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe:Y:SCALe:COUPle:STATe?", Number));
@@ -1294,12 +1980,12 @@ namespace SCPI {
                     _scaleCoupling = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
                     return _scaleCoupling;
                 }
-                protected virtual void SetScaleCoupling(bool ScaleCoupling)
+                private void SetScaleCoupling(bool ScaleCoupling)
                 {
                     _scaleCoupling = ScaleCoupling;
                     _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe:Y:SCALe:COUPle:STATe {1}", Number, _scaleCoupling ? "ON" : "OFF"));
                 }
-                protected virtual string GetTitle()
+                private string GetTitle()
                 {
                     _parentPNAX.ClearEventRegisters();
                     _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:DATA?", Number));
@@ -1307,12 +1993,15 @@ namespace SCPI {
                     _title = _parentPNAX.ReadString();
                     return _title;
                 }
-                protected virtual void SetTitle(string Title)
+                private void SetTitle(string Title)
                 {
+                    if (Title.Length > 50)
+                        Title = Title.Substring(0, 50);
+
                     _title = Title;
                     _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:DATA {1}", Number, _title));
                 }
-                protected virtual bool GetTitleState()
+                private bool GetTitleState()
                 {
                     _parentPNAX.ClearEventRegisters();
                     _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:STATe?", Number));
@@ -1320,72 +2009,14 @@ namespace SCPI {
                     _titleState = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
                     return _titleState;
                 }
-                protected virtual void SetTitleState(bool TitleState)
+                private void SetTitleState(bool TitleState)
                 {
                     _titleState = TitleState;
                     _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:STATe {1}", Number, _titleState ? "ON" : "OFF"));
                 }
 
-                // Public Methods
-                /// <summary>
-                /// Maps the channels measurements to traces in this window.
-                /// The maximum traces to display is 24.
-                /// </summary>
-                /// <param name="Channel">Channel to map to this window.</param>
-                /// <returns>True if a channel is successfully mapped.
-                /// False if the channel has >24 measurements or if there is already a mapped channel.</returns>
-                public virtual bool MapChannel(ChannelClass Channel)
-                {
-                    if (_mappedChannel != null)
-                        return false;
-
-                    // Check that the traces don't exceed maximum number of traces (24) per window or there are no measurements
-                    if (Channel.MeasurementNames.Length > 24 || Channel.MeasurementNames.Length == 0)
-                        return false;
-
-                    _mappedChannel = Channel;
-
-                    for (int i = 0; i < _mappedChannel.MeasurementNames.Length; i++) {
-                        Traces.Add(_mappedChannel.MeasurementNames[i]);
-                    }
-
-                    _mappedChannel._mappedToWindow = true;
-                    _mappedChannel._mappedWindowNumber = Number;
-
-                    return true;
-                }
-                /// <summary>
-                /// Deletes the traces associated with this window and unmaps the channel from this window.
-                /// Note that this does not delete the measurements associated with the channel.
-                /// </summary>
-                /// <returns>True if successfully unmaps. False if there is nothing to unmap.</returns>
-                public virtual bool UnMapChannel()
-                {
-                    if (_mappedChannel == null)
-                        return false;
-
-                    List<int> openTraces = new List<int>(Traces.OpenTraceNumbers);
-                    foreach (int openTrace in openTraces) {
-                        Traces.Delete(openTrace);
-                    }
-
-                    _mappedChannel._mappedToWindow = false;
-                    _mappedChannel._mappedWindowNumber = -1;
-
-                    _mappedChannel = null;
-
-                    return true;
-                }
-                /// <summary>
-                /// Autoscales all traces in this window.
-                /// </summary>
-                public virtual void AutoscaleAllTraces()
-                {
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:Y:AUTO", Number));
-                }
-
             }
-            public class WindowCollectionClass {
+            public class WindowCollectionClass : IEnumerable<WindowClass> {
 
                 // Variables
                 private PNAX _parentPNAX;
@@ -1394,19 +2025,33 @@ namespace SCPI {
 
                 // Properties
                 /// <summary>
-                /// The window numbers used by the PNAX, not necessarily created using this driver
+                /// Number of windows managed by this driver.
+                /// </summary>
+                public int Count
+                {
+                    get { return this._windows.Count; }
+                }
+                /// <summary>
+                /// Window Numbers managed by this driver.
+                /// </summary>
+                public int[] ManagedWindowNumbers
+                {
+                    get { return this._windows.Keys.ToArray(); }
+                }
+                /// <summary>
+                /// All open window numbers on the PNAX. Not all windows are necessarily managed by this driver.
+                /// i.e. If a window was created locally using the front panel, this driver does not manage its use.
                 /// </summary>
                 public int[] OpenWindowNumbers
                 {
                     get { return this.GetOpenWindowNumbers(); }
                 }
                 /// <summary>
-                /// The window numbers managed by this driver instance. There may or may not be more windows on the PNAX created in local mode that are not managed here.
+                /// Coupling method for trace scaling.
+                /// Off = No coupling.
+                /// Window = Scale settings are coupled for traces in each window.
+                /// All = Scale settings are coupled for traces in all selected windows. Setting controlled by coupling state of each window.
                 /// </summary>
-                public int[] ManagedWindowNumbers
-                {
-                    get { return this._windows.Keys.ToArray(); }
-                }
                 public ScaleCouplingMethodEnum ScaleCouplingMethod
                 {
                     get { return this.GetScaleCouplingMethod(); }
@@ -1414,49 +2059,32 @@ namespace SCPI {
                 }
 
                 // Constructor
-                public WindowCollectionClass(PNAX ParentPNAX)
+                internal WindowCollectionClass(PNAX ParentPNAX)
                 {
                     _parentPNAX = ParentPNAX;
-                    _windows = new Dictionary<int, WindowClass>();
                 }
 
                 // Indexer
-                /// <summary>
-                /// Access the window by the Window Number.
-                /// </summary>
-                /// <param name="WindowNumber">Window number trying to access (lowest is 1)</param>
-                /// <returns>The window given by the window number.</returns>
-                public WindowClass this[int WindowNumber]
+                public WindowClass this[int Number]
                 {
                     get
                     {
-                        if (!_windows.ContainsKey(WindowNumber))
-                            throw new System.ArgumentException("Window does not exist", "WindowNumber");
+                        if (!_windows.ContainsKey(Number))
+                            throw new System.IndexOutOfRangeException("Window Number does not exist or is not managed by this driver.");
 
-                        return _windows[WindowNumber];
+                        return _windows[Number];
                     }
                 }
 
-                // Protected Methods
-                protected virtual int[] GetOpenWindowNumbers()
+                // Private Methods
+                private int[] GetOpenWindowNumbers()
                 {
-                    List<int> windows = new List<int>();
-                    string[] retVals;
-
                     _parentPNAX.ClearEventRegisters();
                     _parentPNAX.WriteString("SYSTem:WINDows:CATalog?");
                     _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    retVals = _parentPNAX.ReadString().Split(new char[] { '"', ',', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    foreach (string windowNumber in retVals) {
-                        windows.Add(int.Parse(windowNumber));
-                    }
-
-                    windows.Sort();
-
-                    return windows.ToArray();
+                    return (int[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
                 }
-                protected virtual ScaleCouplingMethodEnum GetScaleCouplingMethod()
+                private ScaleCouplingMethodEnum GetScaleCouplingMethod()
                 {
                     string retVal;
                     _parentPNAX.ClearEventRegisters();
@@ -1472,7 +2100,7 @@ namespace SCPI {
                     }
                     return _scaleCouplingMethod;
                 }
-                protected virtual void SetScaleCouplingMethod(ScaleCouplingMethodEnum ScaleCouplingMethod)
+                private void SetScaleCouplingMethod(ScaleCouplingMethodEnum ScaleCouplingMethod)
                 {
                     _scaleCouplingMethod = ScaleCouplingMethod;
                     switch (_scaleCouplingMethod) {
@@ -1489,122 +2117,150 @@ namespace SCPI {
                 }
 
                 // Public Methods
+                /// <summary>
+                /// Adds a new window with the next available window number.
+                /// </summary>
+                /// <returns>
+                /// The window number of the newly created channel.
+                /// If the maximum number of windows is reached, returns -1.
+                /// </returns>
                 public int Add()
                 {
-                    int firstOpenWindowNumber = 1;
-                    List<int> currentWindowNumbers = new List<int>(OpenWindowNumbers);
-                    currentWindowNumbers.AddRange(_windows.Keys);
+                    int availableWindowNumber = 1;
+                    int[] openWindowNumbers = OpenWindowNumbers;
 
-                    currentWindowNumbers = currentWindowNumbers.Distinct().ToList();
-                    currentWindowNumbers.Sort();
+                    if (openWindowNumbers.Length == _parentPNAX.Capabilities.MaximumWindows)
+                        return -1;
 
-                    for (int i = 0; i < currentWindowNumbers.Count; i++) {
-                        if ((i + 1) != currentWindowNumbers[i]) {
-                            firstOpenWindowNumber = i + 1;
+                    for (int i = 0; i < openWindowNumbers.Length; i++) {
+                        if (!openWindowNumbers.Contains(i + 1)) {
+                            availableWindowNumber = i + 1;
                             break;
                         }
                     }
 
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe ON", firstOpenWindowNumber));
-                    _windows.Add(firstOpenWindowNumber, new WindowClass(_parentPNAX, firstOpenWindowNumber));
+                    // TO DO: Add a new window to the dictionary
 
-                    return firstOpenWindowNumber;
+                    return availableWindowNumber;
                 }
-                public void Delete(int WindowNumber)
+                /// <summary>
+                /// Deletes the specified window number from the collection and destroys the window on the PNAX.
+                /// </summary>
+                /// <returns>True if the window is deleted. False if the specified window number doesn't exist.</returns>
+                public bool Delete(int WindowNumber)
                 {
                     if (_windows.ContainsKey(WindowNumber)) {
-                        this[WindowNumber].UnMapChannel();
                         _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", WindowNumber));
                         _windows.Remove(WindowNumber);
+                        return true;
                     } else if (OpenWindowNumbers.Contains(WindowNumber)) {
                         _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", WindowNumber));
+                        return true;
+                    } else {
+                        return false;
                     }
+                }
+                /// <summary>
+                /// Iterates through all open window numbers and deletes them.
+                /// </summary>
+                public void DeleteAll()
+                {
+                    List<int> allNumbers = new List<int>(OpenWindowNumbers);
+                    foreach (int number in allNumbers) {
+                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", number));
+                    }
+                    _windows.Clear();
+                }
+                public IEnumerator<WindowClass> GetEnumerator()
+                {
+                    return _windows.Values.GetEnumerator();
+                }
+
+                // Unused Interface Methods
+                IEnumerator IEnumerable.GetEnumerator()
+                {
+                    throw new NotImplementedException();
                 }
             }
 
             // Enumerations
-            // Trigger
-            public enum TriggerSourceEnum { Immediate, External, Manual };
+                // Data Format
+            public enum DataFormatEnum { Real32, Real64, ASCii0 };
+                // Display
+            public enum GridLineTypeEnum { Solid, Dotted };
+                // Trigger
+            public enum TriggerSourceEnum { External, Immediate, Manual };
             public enum TriggerScopeEnum { All, Current };
-            public enum ExternalTriggerTypeEnum { Edge, Level };
             public enum ExternalTriggerSlopeEnum { Positive, Negative };
-            // Measurement
-            public enum MeasurementClassEnum { SParameters };
-            public enum MeasurementFormatEnum { Linear, Logarithmic, Phase, UnwrappedPhase, Imaginary, Real, Polar, Smith, SmithAdmittance, SWR };
-            // Trace Scaling
+            public enum ExternalTriggerTypeEnum { Edge, Level };
+            public enum ExternalTriggerRouteEnum { Main, Math, Pulse3 };
+                // Averaging
+            public enum AveragingModeEnum { Point, Sweep };
+                // Measurement
+            public enum MeasurementFormatEnum { Linear, Logarithmic, Phase, UnwrappedPhase, Imaginary, Real, Polar, Smith, SmithAdmittance, SWR, GroupDelay, Kelvin, Fahrenheit, Celsius };
+            public enum TraceHoldTypeEnum { Off, Minimum, Maximum };
+                // Window
             public enum ScaleCouplingMethodEnum { Off, Window, All };
-            // Noise
-            public enum NoiseReceiverGainEnum { Low, Medium, High };
-            // Data
-            public enum DataFormatEnum { ASCii, Real32, Real64 };
-            public enum DataAccessMapEnum { FDATA, RDATA, SDATA };
 
             // Variables
-            private bool _displayState;
-            private bool _rfOutputState;
             private DataFormatEnum _dataFormat;
 
             // Properties
-            public TriggerClass Trigger
-            { get; private set; }
-            public ChannelCollectionClass Channels
-            { get; private set; }
-            public WindowCollectionClass Windows
-            { get; private set; }
-            public bool DisplayState
-            {
-                get { return this.GetDisplayState(); }
-                set { this.SetDisplayState(value); }
-            }
-            public bool RFOutputState
-            {
-                get { return this.GetRFOutputState(); }
-                set { this.SetRFOutputState(value); }
-            }
+            /// <summary>
+            /// Format of data transfers from PNA to computer.
+            /// Use Real64 for frequency data and Real32 for measurement data.
+            /// Transferring data in ASCii format is not recommended because it significantly increases transfer times.
+            /// </summary>
             public DataFormatEnum DataFormat
             {
                 get { return this.GetDataFormat(); }
                 set { this.SetDataFormat(value); }
             }
+            /// <summary>
+            /// Properties showing capabilities of this PNAX
+            /// </summary>
+            public CapabilitiesClass Capabilities
+            { get; private set; }
+            /// <summary>
+            /// Control the display of the PNAX.
+            /// </summary>
+            public DisplayClass Display
+            { get; private set; }
+            /// <summary>
+            /// Control the trigger properties.
+            /// </summary>
+            public TriggerClass Trigger
+            { get; private set; }
+            /// <summary>
+            /// Control the output properties.
+            /// </summary>
+            public OutputClass Output
+            { get; private set; }
+            /// <summary>
+            /// Control the channels of the PNAX.
+            /// </summary>
+            public ChannelCollectionClass Channels
+            { get; private set; }
+            /// <summary>
+            /// Control the windows of the PNAX.
+            /// </summary>
+            public WindowCollectionClass Windows
+            { get; private set; }
 
             // Constructor
             public PNAX()
                 : base()
             {
+                Capabilities = new CapabilitiesClass(this);
+                Display = new DisplayClass(this);
                 Trigger = new TriggerClass(this);
+                Output = new OutputClass(this);
                 Channels = new ChannelCollectionClass(this);
                 Windows = new WindowCollectionClass(this);
             }
-
-
-            // Protected Methods
-            protected virtual bool GetDisplayState()
-            {
-                ClearEventRegisters();
-                WriteString("DISPlay:VISible?");
-                WaitForMeasurementToComplete(Timeout);
-                _displayState = (((byte)ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                return _displayState;
-            }
-            protected virtual void SetDisplayState(bool DisplayState)
-            {
-                _displayState = DisplayState;
-                WriteString(String.Format("DISPlay:VISible {0}", _displayState ? "ON" : "OFF"));
-            }
-            protected virtual bool GetRFOutputState()
-            {
-                ClearEventRegisters();
-                WriteString("OUTput:STATe?");
-                WaitForMeasurementToComplete(Timeout);
-                _rfOutputState = (((byte)ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                return _rfOutputState;
-            }
-            protected virtual void SetRFOutputState(bool RFOutputState)
-            {
-                _rfOutputState = RFOutputState;
-                WriteString(String.Format("OUTPut:STATe {0}", _rfOutputState ? "ON" : "OFF"));
-            }
-            protected virtual DataFormatEnum GetDataFormat()
+            
+            // Private Methods
+            private DataFormatEnum GetDataFormat()
             {
                 string retVal;
                 ClearEventRegisters();
@@ -1612,42 +2268,37 @@ namespace SCPI {
                 WaitForMeasurementToComplete(Timeout);
                 retVal = ReadString();
                 if (retVal.Contains("REAL")) {
-                    if (retVal.Contains("64")) {
-                        _dataFormat = DataFormatEnum.Real64;
-                    } else {
+                    if (retVal.Contains("32")) {
                         _dataFormat = DataFormatEnum.Real32;
+                    } else {
+                        _dataFormat = DataFormatEnum.Real64;
                     }
                 } else {
-                    _dataFormat = DataFormatEnum.ASCii;
+                    _dataFormat = DataFormatEnum.ASCii0;
                 }
                 return _dataFormat;
             }
-            protected virtual void SetDataFormat(DataFormatEnum DataFormat)
+            private void SetDataFormat(DataFormatEnum DataFormat)
             {
                 _dataFormat = DataFormat;
                 switch (_dataFormat) {
-                    case DataFormatEnum.ASCii:
-                        WriteString("FORMat:DATA ASCii,0");
-                        break;
                     case DataFormatEnum.Real32:
                         WriteString("FORMat:DATA REAL,32");
                         break;
                     case DataFormatEnum.Real64:
                         WriteString("FORMat:DATA REAL,64");
                         break;
+                    case DataFormatEnum.ASCii0:
+                        WriteString("FORMat:DATA ASCii,0");
+                        break;
                 }
             }
 
             // Public Methods
-            public Bitmap GetScreenCapture()
+            public override void Initialize(string GPIBAddress, int Timeout)
             {
-                // Print all windows in bitmap format
-                WriteString("HCOPy:ITEM:AWINdow:STATe OFF");
-                WriteString("HCOPy:SDUMp:DATA:FORMat BMP");
-                ClearEventRegisters();
-                WriteString("HCOPy:SDUMp:DATA?");
-                WaitForMeasurementToComplete(Timeout);
-                return new Bitmap((Image)new ImageConverter().ConvertFrom((Byte[])ReadIEEEBlock(IEEEBinaryType.BinaryType_UI1, true, true)));
+                base.Initialize(GPIBAddress, Timeout);
+                Capabilities.FindCapabilities();
             }
             public override void Reset()
             {

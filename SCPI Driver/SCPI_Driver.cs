@@ -266,7 +266,7 @@ namespace SCPI {
         }
 
         // Public Methods (Visible to end user)
-        public void Initialize(string GPIBAddress, int Timeout)
+        public virtual void Initialize(string GPIBAddress, int Timeout)
         {
             if (!Initialized && !_closed) {
 
