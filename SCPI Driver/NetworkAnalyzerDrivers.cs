@@ -639,6 +639,1521 @@ namespace SCPI {
                     }
 
                 }
+                public class FrequencyClass {
+                    
+                    // Variables
+                    private ChannelClass _parentChannel;
+                    private double _center;
+                    private double _span;
+                    private double _start;
+                    private double _stop;
+                    private double _cw;
+                    private double _minimumCenter;
+                    private double _maximumCenter;
+                    private double _minimumSpan;
+                    private double _maximumSpan;
+                    private double _minimumStart;
+                    private double _maximumStart;
+                    private double _minimumStop;
+                    private double _maximumStop;
+                    private double _minimumCW;
+                    private double _maximumCW;
+
+                    // Properties
+                    /// <summary>
+                    /// Center frequency of the channel.
+                    /// </summary>
+                    public double Center
+                    {
+                        get { return this.GetCenter(); }
+                        set { this.SetCenter(value); }
+                    }
+                    /// <summary>
+                    /// Frequency span of the channel.
+                    /// </summary>
+                    public double Span
+                    {
+                        get { return this.GetSpan(); }
+                        set { this.SetSpan(value); }
+                    }
+                    /// <summary>
+                    /// Start frequency of the channel
+                    /// </summary>
+                    public double Start
+                    {
+                        get { return this.GetStart(); }
+                        set { this.SetStart(value); }
+                    }
+                    /// <summary>
+                    /// Stop frequency of the channel.
+                    /// </summary>
+                    public double Stop
+                    {
+                        get { return this.GetStop(); }
+                        set { this.SetStop(value); }
+                    }
+                    /// <summary>
+                    /// CW frequency of the channel. Valid when the channel is put into CW Sweep mode.
+                    /// </summary>
+                    public double CW
+                    {
+                        get { return this.GetCW(); }
+                        set { this.SetCW(value); }
+                    }
+                    /// <summary>
+                    /// Minimum allowed center frequency.
+                    /// </summary>
+                    public double MinimumCenter
+                    {
+                        get { return this.GetMinimumCenter(); }
+                    }
+                    /// <summary>
+                    /// Maximum allowed center frequency.
+                    /// </summary>
+                    public double MaximumCenter
+                    {
+                        get { return this.GetMaximumCenter(); }
+                    }
+                    /// <summary>
+                    /// Minimum allowed span.
+                    /// </summary>
+                    public double MinimumSpan
+                    {
+                        get { return this.GetMinimumSpan(); }
+                    }
+                    /// <summary>
+                    /// Maximum allowed span.
+                    /// </summary>
+                    public double MaximumSpan
+                    {
+                        get { return this.GetMaximumSpan(); }
+                    }
+                    /// <summary>
+                    /// Minimum allowed start frequency.
+                    /// </summary>
+                    public double MinimumStart
+                    {
+                        get { return this.GetMinimumStart(); }
+                    }
+                    /// <summary>
+                    /// Maximum allowed start frequency.
+                    /// </summary>
+                    public double MaximumStart
+                    {
+                        get { return this.GetMaximumStart(); }
+                    }
+                    /// <summary>
+                    /// Minimum allowed stop frequency.
+                    /// </summary>
+                    public double MinimumStop
+                    {
+                        get { return this.GetMinimumStop(); }
+                    }
+                    /// <summary>
+                    /// Maximum allowed stop frequency.
+                    /// </summary>
+                    public double MaximumStop
+                    {
+                        get { return this.GetMaximumStop(); }
+                    }
+                    /// <summary>
+                    /// Minimum allowed cw frequency.
+                    /// </summary>
+                    public double MinimumCW
+                    {
+                        get { return this.GetMinimumCW(); }
+                    }
+                    /// <summary>
+                    /// Maximum allowed cw frequency.
+                    /// </summary>
+                    public double MaximumCW
+                    {
+                        get { return this.GetMaximumCW(); }
+                    }
+
+                    // Constructor
+                    internal FrequencyClass(ChannelClass ParentChannel)
+                    {
+                        _parentChannel = ParentChannel;
+                    }
+
+                    // Private Methods
+                    private double GetCenter()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CENTer?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _center = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _center;
+                    }
+                    private void SetCenter(double Center)
+                    {
+                        _center = Center;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CENTer {1}", _parentChannel.Number, _center));
+                    }
+                    private double GetSpan()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:SPAN?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _span = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _span;
+                    }
+                    private void SetSpan(double Span)
+                    {
+                        _span = Span;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:SPAN {1}", _parentChannel.Number, _span));
+                    }
+                    private double GetStart()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STARt?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _start = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _start;
+                    }
+                    private void SetStart(double Start)
+                    {
+                        _start = Start;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STARt {1}", _parentChannel.Number, _start));
+                    }
+                    private double GetStop()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STOP?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _stop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _stop;
+                    }
+                    private void SetStop(double Stop)
+                    {
+                        _stop = Stop;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STOP {1}", _parentChannel.Number, _stop));
+                    }
+                    private double GetCW()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CW?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _cw = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _cw;
+                    }
+                    private void SetCW(double CW)
+                    {
+                        _cw = CW;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CW {1}", _parentChannel.Number, _cw));
+                    }
+                    private double GetMinimumCenter()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CENTer? MINimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _minimumCenter = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _minimumCenter;
+                    }
+                    private double GetMaximumCenter()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CENTer? MAXimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _maximumCenter = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _maximumCenter;
+                    }
+                    private double GetMinimumSpan()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:SPAN? MINimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _minimumSpan = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _minimumSpan;
+                    }
+                    private double GetMaximumSpan()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:SPAN? MAXimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _maximumSpan = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _maximumSpan;
+                    }
+                    private double GetMinimumStart()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STARt? MINimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _minimumStart = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _minimumStart;
+                    }
+                    private double GetMaximumStart()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STARt? MAXimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _maximumStart = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _maximumStart;
+                    }
+                    private double GetMinimumStop()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STOP? MINimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _minimumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _minimumStop;
+                    }
+                    private double GetMaximumStop()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:STOP? MAXimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _maximumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _maximumStop;
+                    }
+                    private double GetMinimumCW()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CW? MINimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _minimumCW = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _minimumCW;
+                    }
+                    private double GetMaximumCW()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:FREQuency:CW? MAXimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _maximumCW = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _maximumCW;
+                    }
+
+                }
+                public class IFBandwidthClass {
+
+                    // Variables
+                    private ChannelClass _parentChannel;
+                    private double _resolution;
+                    private bool _track;
+
+                    // Properties
+                    /// <summary>
+                    /// IF Bandwidth of the digital filter.
+                    /// </summary>
+                    public double Resolution
+                    {
+                        get { return this.GetResolution(); }
+                        set { this.SetResolution(value); }
+                    }
+                    /// <summary>
+                    /// Whether or not to reduce IF Bandwidth at low frequencies.
+                    /// </summary>
+                    public bool Track
+                    {
+                        get { return this.GetTrack(); }
+                        set { this.SetTrack(value); }
+                    }
+
+                    // Constructor
+                    internal IFBandwidthClass(ChannelClass ParentChannel)
+                    {
+                        _parentChannel = ParentChannel;
+                    }
+
+                    // Private Methods
+                    private double GetResolution()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:BANDwidth:RESolution?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _resolution = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _resolution;
+                    }
+                    private void SetResolution(double Resolution)
+                    {
+                        _resolution = Resolution;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:BANDwidth:RESolution {1}", _parentChannel.Number, _resolution));
+                    }
+                    private bool GetTrack()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:BANDwidth:TRACk?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _track = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                        return _track;
+                    }
+                    private void SetTrack(bool Track)
+                    {
+                        _track = Track;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:BANDwidth:TRACk {1}", _parentChannel.Number, _track ? "ON" : "OFF"));
+                    }
+
+                }
+                public class SourceClass {
+
+                    // Nested Classes
+                    public class PortClass {
+
+                        // Variables
+                        private ChannelClass _parentChannel;
+                        private PortALCModeEnum _alcMode;
+
+                        // Properties
+                        /// <summary>
+                        /// The name associated with this port.
+                        /// </summary>
+                        public string Name
+                        { get; private set; }
+                        /// <summary>
+                        /// Controls the ALC Mode for this port on this channel.
+                        /// </summary>
+                        public PortALCModeEnum ALCMode
+                        {
+                            get { return this.GetALCMode(); }
+                            set { this.SetALCMode(value); }
+                        }
+
+                        // Constructor
+                        internal PortClass(string Name, ChannelClass ParentChannel)
+                        {
+                            _parentChannel = ParentChannel;
+                        }
+
+                        // Private Methods
+                        private PortALCModeEnum GetALCMode()
+                        {
+                            string retVal;
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ALC:MODE? '{1}'", _parentChannel.Number, Name));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            retVal = _parentChannel._parentPNAX.ReadString();
+                            if (retVal.Contains("INT")) {
+                                _alcMode = PortALCModeEnum.Internal;
+                            } else {
+                                _alcMode = PortALCModeEnum.OpenLoop;
+                            }
+                            return _alcMode;
+                        }
+                        private void SetALCMode(PortALCModeEnum ALCMode)
+                        {
+                            _alcMode = ALCMode;
+                            switch (_alcMode) {
+                                case PortALCModeEnum.Internal:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ALC:MODE INTernal, '{1}'", _parentChannel.Number, Name));
+                                    break;
+                                case PortALCModeEnum.OpenLoop:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ALC:MODE OPENloop, '{1}'", _parentChannel.Number, Name));
+                                    break;
+                            }
+                        }
+                    }
+                    public class PortCollectionClass : IEnumerable<PortClass> {
+
+                        // Variables
+                        private ChannelClass _parentChannel;
+                        private Dictionary<string, PortClass> _ports;
+
+                        // Properties
+                        /// <summary>
+                        /// Number of ports that can be controlled by this channel.
+                        /// </summary>
+                        public int Count
+                        {
+                            get { return this._ports.Count; }
+                        }
+                        /// <summary>
+                        /// Names of the ports that can be controlled
+                        /// </summary>
+                        public string[] Names
+                        {
+                            get { return this._ports.Keys.ToArray(); }
+                        }
+
+                        // Constructor
+                        internal PortCollectionClass(ChannelClass ParentChannel)
+                        {
+                            _parentChannel = ParentChannel;
+                            _ports = new Dictionary<string, PortClass>();
+                        }
+
+                        // Indexer
+                        public PortClass this[string Name]
+                        {
+                            get
+                            {
+                                if (!_ports.ContainsKey(Name))
+                                    throw new IndexOutOfRangeException("Port name does not exist for this channel.");
+
+                                return _ports[Name];
+                            }
+                        }
+
+                        // Private Methods
+                        
+
+                        // Internal Methods
+                        internal void FindPorts()
+                        {
+                            object[] retVals;
+                            string portName;
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:CATalog?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            retVals = (object[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                            _ports.Clear();
+                            foreach (object retVal in retVals) {
+                                portName = Convert.ToString(retVal);
+                                _ports.Add(portName, new PortClass(portName, _parentChannel));
+                            }
+                        }
+
+                        // Public Methods
+                        public IEnumerator<PortClass> GetEnumerator()
+                        {
+                            return _ports.Values.GetEnumerator();
+                        }
+
+                        // Unused Interface Methods
+                        IEnumerator IEnumerable.GetEnumerator()
+                        {
+                            throw new NotImplementedException();
+                        }
+                    }
+
+                    // Variables
+                    private ChannelClass _parentChannel;
+
+                    // Properties
+                    /// <summary>
+                    /// Ports attached to this channel.
+                    /// </summary>
+                    public PortCollectionClass Ports
+                    { get; private set; }
+
+                    // Constructor
+                    internal SourceClass(ChannelClass ParentChannel)
+                    {
+                        _parentChannel = ParentChannel;
+                        Ports = new PortCollectionClass(_parentChannel);
+                    }
+
+                    // Private Methods
+
+
+                }
+                public class SweepClass {
+
+                    // Nested Classes
+                    public class DwellClass {
+                        
+                        // Variables
+                        private ChannelClass _parentChannel;
+                        private double _time;
+                        private bool _auto;
+                        private double _sweepDelay;
+                        private double _minimumTime;
+                        private double _maximumTime;
+                        private double _minimumSweepDelay;
+                        private double _maximumSweepDelay;
+
+                        // Properties
+                        /// <summary>
+                        /// Dwell time between each sweep point.
+                        /// Only available when SweepClass.Generation is set to Stepped.
+                        /// </summary>
+                        public double Time
+                        {
+                            get { return this.GetTime(); }
+                            set { this.SetTime(value); }
+                        }
+                        /// <summary>
+                        /// Whether or not to automatically calculate and set the minimum possible dwell time.
+                        /// Setting Auto = true has same effect as Time = 0
+                        /// </summary>
+                        public bool Auto
+                        {
+                            get { return this.GetAuto(); }
+                            set { this.SetAuto(value); }
+                        }
+                        /// <summary>
+                        /// Time to wait just before acquistion begins for each sweep.
+                        /// </summary>
+                        public double SweepDelay
+                        {
+                            get { return this.GetSweepDelay(); }
+                            set { this.SetSweepDelay(value); }
+                        }
+                        /// <summary>
+                        /// Minimum allowed dwell time.
+                        /// </summary>
+                        public double MinimumTime
+                        {
+                            get { return this.GetMinimumTime(); }
+                        }
+                        /// <summary>
+                        /// Maximum allowed dwell time.
+                        /// </summary>
+                        public double MaximumTime
+                        {
+                            get { return this.GetMaximumTime(); }
+                        }
+                        /// <summary>
+                        /// Minimum allowed sweep delay.
+                        /// </summary>
+                        public double MinimumSweepDelay
+                        {
+                            get { return this.GetMinimumSweepDelay(); }
+                        }
+                        /// <summary>
+                        /// Maximum allowed sweep delay.
+                        /// </summary>
+                        public double MaximumSweepDelay
+                        {
+                            get { return this.GetMaximumSweepDelay(); }
+                        }
+
+                        // Constructor
+                        internal DwellClass(ChannelClass ParentChannel)
+                        {
+                            _parentChannel = ParentChannel;
+                        }
+
+                        // Private Methods
+                        private double GetTime()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _time = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _time;
+                        }
+                        private void SetTime(double Time)
+                        {
+                            _time = Time;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl {1}", _parentChannel.Number, _time));
+                        }
+                        private bool GetAuto()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl:AUTO?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _auto = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _auto;
+                        }
+                        private void SetAuto(bool Auto)
+                        {
+                            _auto = Auto;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl:AUTO {1}", _parentChannel.Number, _auto ? "ON" : "OFF"));
+                        }
+                        private double GetSweepDelay()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl:SDELay?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _sweepDelay = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _sweepDelay;
+                        }
+                        private void SetSweepDelay(double SweepDelay)
+                        {
+                            _sweepDelay = SweepDelay;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl:SDELay {1}", _parentChannel.Number, _sweepDelay));
+                        }
+                        private double GetMinimumTime()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl? MINimum", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _minimumTime = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _minimumTime;
+                        }
+                        private double GetMaximumTime()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl? MAXimum", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _maximumTime = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _maximumTime;
+                        }
+                        private double GetMinimumSweepDelay()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl:SDELay? MINimum", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _minimumSweepDelay = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _minimumSweepDelay;
+                        }
+                        private double GetMaximumSweepDelay()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:DWELl:SDELay? MAXimum", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _maximumSweepDelay = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _maximumSweepDelay;
+                        }
+
+                    }
+                    public class TriggerClass {
+
+                        // Variables
+                        private ChannelClass _parentChannel;
+                        private int _groupCount;
+                        private double _delay;
+                        private SweepTriggerModeEnum _mode;
+
+                        // Properties
+                        /// <summary>
+                        /// Number of triggers this channel will respond to in Sweep.Mode = Group
+                        /// </summary>
+                        public int GroupCount
+                        {
+                            get { return this.GetGroupCount(); }
+                            set { this.SetGroupCount(value); }
+                        }
+                        /// <summary>
+                        /// Trigger delay in seconds of the specified channel. Only applies when PNAX.Trigger.Source = External and PNAX.Trigger.Scope = Current.
+                        /// Must be between 0 and 3 sseconds.
+                        /// </summary>
+                        public double Delay
+                        {
+                            get { return this.GetDelay(); }
+                            set { this.SetDelay(value); }
+                        }
+                        /// <summary>
+                        /// Trigger Mode for the specified channel.
+                        /// Channel = Each trigger signal causes all traces in the channel to be swept (default)
+                        /// Sweep = Each manual or external trigger signal causes all traces that share a source port to be swept.
+                        /// Point = Each manual or external trigger signal causes one data point to be measured.
+                        /// Trace = Allowed only when Sweep.PointSweep is true. Each trigger signal causes two identical measurements to be triggered separately - one trigger signal is required for each measurement. Other trigger mode settings cause two identical parameters to be measured simultaneously.
+                        /// </summary>
+                        public SweepTriggerModeEnum Mode
+                        {
+                            get { return this.GetMode(); }
+                            set { this.SetMode(value); }
+                        }
+
+                        // Constructor
+                        internal TriggerClass(ChannelClass ParentChannel)
+                        {
+                            _parentChannel = ParentChannel;
+                        }
+
+                        // Private Methods
+                        private int GetGroupCount()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:GROups:COUNt?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _groupCount = (int)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                            return _groupCount;
+                        }
+                        private void SetGroupCount(int GroupCount)
+                        {
+                            _groupCount = GroupCount;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:GROups:COUNt {1}", _parentChannel.Number, _groupCount));
+                        }
+                        private double GetDelay()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TRIGger:DELay?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _delay = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _delay;
+                        }
+                        private void SetDelay(double Delay)
+                        {
+                            _delay = Delay;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TRIGger:DELay {1}", _parentChannel.Number, _delay));
+                        }
+                        private SweepTriggerModeEnum GetMode()
+                        {
+                            string retVal;
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TRIGger:MODE?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            retVal = _parentChannel._parentPNAX.ReadString();
+                            if (retVal.Contains("CHAN")) {
+                                _mode = SweepTriggerModeEnum.Channel;
+                            } else if (retVal.Contains("SWE")) {
+                                _mode = SweepTriggerModeEnum.Sweep;
+                            } else if (retVal.Contains("POIN")) {
+                                _mode = SweepTriggerModeEnum.Point;
+                            } else {
+                                _mode = SweepTriggerModeEnum.Trace;
+                            }
+                            return _mode;
+                        }
+                        private void SetMode(SweepTriggerModeEnum Mode)
+                        {
+                            _mode = Mode;
+                            switch (_mode) {
+                                case SweepTriggerModeEnum.Channel:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TRIGger:MODE CHANnel", _parentChannel.Number));
+                                    break;
+                                case SweepTriggerModeEnum.Sweep:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TRIGger:MODE SWEep", _parentChannel.Number));
+                                    break;
+                                case SweepTriggerModeEnum.Point:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TRIGger:MODE POINt", _parentChannel.Number));
+                                    break;
+                                case SweepTriggerModeEnum.Trace:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TRIGger:MODE TRACe", _parentChannel.Number));
+                                    break;
+                            }
+                        }
+
+                    }
+                    public class PulseClass {
+
+                        // Variables
+                        private ChannelClass _parentChannel;
+                        private bool _autoCWTime;
+                        private bool _autoDetectMode;
+                        private bool _autoDrive;
+                        private bool _autoIFGain;
+                        private bool _autoPRF;
+                        private bool _autoTiming;
+                        private double _frequency;
+                        private double _period;
+                        private double _width;
+                        private PulseModeEnum _mode;
+                        private double _profileStartTime;
+                        private double _profileStopTime;
+                        private bool _softwareGating;
+                        private PulseDetectionMode _detectionMode;
+
+                        // Properties
+                        /// <summary>
+                        /// The state of automatic CW sweep time (in Pulse Profile mode).
+                        /// </summary>
+                        public bool AutoCWTime
+                        {
+                            get { return this.GetAutoCWTime(); }
+                            set { this.SetAutoCWTime(value); }
+                        }
+                        /// <summary>
+                        /// Automatically (true) or manually (false) set pulse mode (Narrow or Wideband) for the channel.
+                        /// </summary>
+                        public bool AutoDetectMode
+                        {
+                            get { return this.GetAutoDetectMode(); }
+                            set { this.SetAutoDetectMode(value); }
+                        }
+                        /// <summary>
+                        /// Automatically (true) or manually (false) set the drive for the source modulation in Narrowband mode.
+                        /// </summary>
+                        public bool AutoDrive
+                        {
+                            get { return this.GetAutoDrive(); }
+                            set { this.SetAutoDrive(value); }
+                        }
+                        /// <summary>
+                        /// Automatically (true) or manually (false) set the IF Gain in Narrowband pulse mode.
+                        /// </summary>
+                        public bool AutoIFGain
+                        {
+                            get { return this.GetAutoIFGain(); }
+                            set { this.SetAutoIFGain(value); }
+                        }
+                        /// <summary>
+                        /// Automatically (true) or manually (false) set the Pulse Repition Frequency.
+                        /// For manual, the PRF is controlled using Frequency or Period.
+                        /// </summary>
+                        public bool AutoPRF
+                        {
+                            get { return this.GetAutoPRF(); }
+                            set { this.SetAutoPRF(value); }
+                        }
+                        /// <summary>
+                        /// Automatically (true) or manually (false) set the Width and Delay.
+                        /// </summary>
+                        public bool AutoTiming
+                        {
+                            get { return this.GetAutoTiming(); }
+                            set { this.SetAutoTiming(value); }
+                        }
+                        /// <summary>
+                        /// The master pulse measurement frequency in Hz.
+                        /// Frequency = 1/Period.
+                        /// </summary>
+                        public double Frequency
+                        {
+                            get { return this.GetFrequency(); }
+                            set { this.SetFrequency(value); }
+                        }
+                        /// <summary>
+                        /// The master pulse measurement period in seconds.
+                        /// Period = 1/Frequency.
+                        /// </summary>
+                        public double Period
+                        {
+                            get { return this.GetPeriod(); }
+                            set { this.SetPeriod(value); }
+                        }
+                        /// <summary>
+                        /// The master pulse measurement width in seconds.
+                        /// </summary>
+                        public double Width
+                        {
+                            get { return this.GetWidth(); }
+                            set { this.SetWidth(value); }
+                        }
+                        /// <summary>
+                        /// Pulse measurement state for this channel.
+                        /// Off = Turn off pulse measurements (default).
+                        /// Standard = Standard pulse measurements.
+                        /// Profile = Pulse profile measurements.
+                        /// </summary>
+                        public PulseModeEnum Mode
+                        {
+                            get { return this.GetMode(); }
+                            set { this.SetMode(value); }
+                        }
+                        /// <summary>
+                        /// The start time in seconds of the pulse in pulse profile mode.
+                        /// </summary>
+                        public double ProfileStartTime
+                        {
+                            get { return this.GetProfileStartTime(); }
+                            set { this.SetProfileStartTime(value); }
+                        }
+                        /// <summary>
+                        /// The stop time in seconds of the pulse in pulse profile mode.
+                        /// </summary>
+                        public double ProfileStopTime
+                        {
+                            get { return this.GetProfileStopTime(); }
+                            set { this.SetProfileStopTime(value); }
+                        }
+                        /// <summary>
+                        /// When set to off (false), the improved software gating sensitivity is turned off and
+                        /// all data outside the measurement band is zeroed. This is used for troubleshooting purposes.
+                        /// There is NO user-interface control on the PNA for this setting.
+                        /// Defaults to ON (true).
+                        /// </summary>
+                        public bool SoftwareGating
+                        {
+                            get { return this.GetSoftwareGating(); }
+                            set { this.SetSoftwareGating(value); }
+                        }
+                        /// <summary>
+                        /// Narrowband or Wideband pulse detection.
+                        /// </summary>
+                        public PulseDetectionMode DetectionMode
+                        {
+                            get { return this.GetDetectionMode(); }
+                            set { this.SetDetectionMode(value); }
+                        }
+
+                        // Constructor
+                        internal PulseClass(ChannelClass ParentChannel)
+                        {
+                            _parentChannel = ParentChannel;
+                        }
+
+                        // Private Methods
+                        private bool GetAutoCWTime()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:CWTime:AUTO?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _autoCWTime = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _autoCWTime;
+                        }
+                        private void SetAutoCWTime(bool AutoCWTime)
+                        {
+                            _autoCWTime = AutoCWTime;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:CWTime:AUTO {1}", _parentChannel.Number, _autoCWTime ? "ON" : "OFF"));
+                        }
+                        private bool GetAutoDetectMode()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:DETectmode:AUTO?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _autoDetectMode = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _autoDetectMode;
+                        }
+                        private void SetAutoDetectMode(bool AutoDetectMode)
+                        {
+                            _autoDetectMode = AutoDetectMode;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:DETectmode:AUTO {1}", _parentChannel.Number, _autoDetectMode ? "ON" : "OFF"));
+                        }
+                        private bool GetAutoDrive()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:DRIVe:AUTO?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _autoDrive = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _autoDrive;
+                        }
+                        private void SetAutoDrive(bool AutoDrive)
+                        {
+                            _autoDrive = AutoDrive;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:DRIVe:AUTO {1}", _parentChannel.Number, _autoDrive ? "ON" : "OFF"));
+                        }
+                        private bool GetAutoIFGain()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:IFGain:AUTO?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _autoIFGain = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _autoIFGain;
+                        }
+                        private void SetAutoIFGain(bool AutoIFGain)
+                        {
+                            _autoIFGain = AutoIFGain;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:IFGain:AUTO {1}", _parentChannel.Number, _autoIFGain ? "ON" : "OFF"));
+                        }
+                        private bool GetAutoPRF()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:PRF:AUTO?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _autoPRF = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _autoPRF;
+                        }
+                        private void SetAutoPRF(bool AutoPRF)
+                        {
+                            _autoPRF = AutoPRF;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:PRF:AUTO {1}", _parentChannel.Number, _autoPRF ? "ON" : "OFF"));
+                        }
+                        private bool GetAutoTiming()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:TIMing:AUTO?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _autoTiming = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _autoTiming;
+                        }
+                        private void SetAutoTiming(bool AutoTiming)
+                        {
+                            _autoTiming = AutoTiming;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:TIMing:AUTO {1}", _parentChannel.Number, _autoTiming ? "ON" : "OFF"));
+                        }
+                        private double GetFrequency()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MASTer:FREQuency?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _frequency = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _frequency;
+                        }
+                        private void SetFrequency(double Frequency)
+                        {
+                            _frequency = Frequency;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MASTer:FREQuency {1}", _parentChannel.Number, _frequency));
+                        }
+                        private double GetPeriod()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MASTer:PERiod?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _period = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _period;
+                        }
+                        private void SetPeriod(double Period)
+                        {
+                            _period = Period;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MASTer:PERiod {1}", _parentChannel.Number, _period));
+                        }
+                        private double GetWidth()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MASTer:WIDth?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _width = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _width;
+                        }
+                        private void SetWidth(double Width)
+                        {
+                            _width = Width;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MASTer:WIDth {1}", _parentChannel.Number, _width));
+                        }
+                        private PulseModeEnum GetMode()
+                        {
+                            string retVal;
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MODE?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            retVal = _parentChannel._parentPNAX.ReadString();
+                            if (retVal.Contains("OFF")) {
+                                _mode = PulseModeEnum.Off;
+                            } else if (retVal.Contains("STD")) {
+                                _mode = PulseModeEnum.Standard;
+                            } else {
+                                _mode = PulseModeEnum.Profile;
+                            }
+                            return _mode;
+                        }
+                        private void SetMode(PulseModeEnum Mode)
+                        {
+                            _mode = Mode;
+                            switch (_mode) {
+                                case PulseModeEnum.Off:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MODE OFF", _parentChannel.Number));
+                                    break;
+                                case PulseModeEnum.Standard:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MODE STD", _parentChannel.Number));
+                                    break;
+                                case PulseModeEnum.Profile:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:MODE PROFILE", _parentChannel.Number));
+                                    break;
+                            }
+                        }
+                        private double GetProfileStartTime()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:PROFile:STARt?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _profileStartTime = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _profileStartTime;
+                        }
+                        private void SetProfileStartTime(double ProfileStartTime)
+                        {
+                            _profileStartTime = ProfileStartTime;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:PROFile:STARt {1}", _parentChannel.Number, _profileStartTime));
+                        }
+                        private double GetProfileStopTime()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:PROFile:STOP?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _profileStopTime = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _profileStopTime;
+                        }
+                        private void SetProfileStopTime(double ProfileStopTime)
+                        {
+                            _profileStopTime = ProfileStopTime;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:PROFile:STOP {1}", _parentChannel.Number, _profileStopTime));
+                        }
+                        private bool GetSoftwareGating()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:SWGate:STATe?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _softwareGating = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _softwareGating;
+                        }
+                        private void SetSoftwareGating(bool SoftwareGating)
+                        {
+                            _softwareGating = SoftwareGating;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:SWGate:STATe {1}", _parentChannel.Number, _softwareGating ? "ON" : "OFF"));
+                        }
+                        private PulseDetectionMode GetDetectionMode()
+                        {
+                            bool retVal;
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:WIDeband:STATe?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            retVal = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            _detectionMode = retVal ? PulseDetectionMode.Wideband : PulseDetectionMode.Narrowband;
+                            return _detectionMode;
+                        }
+                        private void SetDetectionMode(PulseDetectionMode DetectionMode)
+                        {
+                            _detectionMode = DetectionMode;
+                            switch (_detectionMode) {
+                                case PulseDetectionMode.Narrowband:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:WIDeband:STATe OFF", _parentChannel.Number));
+                                    break;
+                                case PulseDetectionMode.Wideband:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:PULSe:WIDeband:STATe ON", _parentChannel.Number));
+                                    break;
+                            }
+                        }
+
+                    }
+
+                    // Variables
+                    private ChannelClass _parentChannel;
+                    private bool _blocked;
+                    private SweepGenerationEnum _generation;
+                    private bool _pointSweep;
+                    private SweepModeEnum _mode;
+                    private int _points;
+                    private bool _fast;
+                    private double _frequencyStepSize;
+                    private double _time;
+                    private bool _autoTime;
+                    private SweepTypeEnum _type;
+                    private int _minimumPoints;
+                    private int _maximumPoints;
+                    private double _minimumTime;
+                    private double _maximumTime;
+
+                    // Properties
+                    /// <summary>
+                    /// Reads whether the channel is currently blocked from sweeping.
+                    /// </summary>
+                    public bool Blocked
+                    {
+                        get { return this.GetBlocked(); }
+                    }
+                    /// <summary>
+                    /// Stepped or Analog sweep generation.
+                    /// Stepped = Source frequency is constant during measurement of each displayed point. More accurate than Analog. Dwell time can be set in this mode.
+                    /// Analog = Source frequency is continuously ramping during measurement of each display point. Faster than Stepped. Sweep time (not Dwell time) can be set in this mode.
+                    /// </summary>
+                    public SweepGenerationEnum Generation
+                    {
+                        get { return this.GetGeneration(); }
+                        set { this.SetGeneration(value); }
+                    }
+                    /// <summary>
+                    /// Turns on or off point sweep mode.
+                    /// When enabled, the PNA measures both forward and reverse parameters at each frequency point before stepping to the next frequency.
+                    /// </summary>
+                    public bool PointSweep
+                    {
+                        get { return this.GetPointSweep(); }
+                        set { this.SetPointSweep(value); }
+                    }
+                    /// <summary>
+                    /// Set the sweep mode that this channel will respond to triggers.
+                    /// Hold = Channel will not trigger.
+                    /// Continuous = Channel triggers indefinitely.
+                    /// Groups = Channel accepts the number of triggers specified with the last Sweep.Trigger.GroupCount setting. THIS IS AN OVERLAPPED COMMAND!
+                    /// Single = Channel accepts one trigger then goes to Hold. 
+                    /// </summary>
+                    public SweepModeEnum Mode
+                    {
+                        get { return this.GetMode(); }
+                        set { this.SetMode(value); }
+                    }
+                    /// <summary>
+                    /// The number of data points for the sweep stimulus.
+                    /// </summary>
+                    public int Points
+                    {
+                        get { return this.GetPoints(); }
+                        set { this.SetPoints(value); }
+                    }
+                    /// <summary>
+                    /// Enable or disable fast sweep mode
+                    /// </summary>
+                    public bool Fast
+                    {
+                        get { return this.GetFast(); }
+                        set { this.SetFast(value); }
+                    }
+                    /// <summary>
+                    /// The frequency step size in Hz across the selected frequency range of the channel.
+                    /// This effectively sets the number of data points.
+                    /// Only available when Sweep.Type = Linear
+                    /// </summary>
+                    public double FrequencyStepSize
+                    {
+                        get { return this.GetFrequencyStepSize(); }
+                        set { this.SetFrequencyStepSize(value); }
+                    }
+                    /// <summary>
+                    /// The time in seconds it takes to complete one sweep.
+                    /// </summary>
+                    public double Time
+                    {
+                        get { return this.GetTime(); }
+                        set { this.SetTime(value); }
+                    }
+                    /// <summary>
+                    /// Controls the automatic sweep time function, on or off.
+                    /// </summary>
+                    public bool AutoTime
+                    {
+                        get { return this.GetAutoTime(); }
+                        set { this.SetAutoTime(value); }
+                    }
+                    /// <summary>
+                    /// The type of analyzer sweep.
+                    /// First set sweep type, then set parameters such as frequency or power settings for the channel.
+                    /// </summary>
+                    public SweepTypeEnum Type
+                    {
+                        get { return this.GetType(); }
+                        set { this.SetType(value); }
+                    }
+                    /// <summary>
+                    /// The minimum number of data points for the sweep stimulus.
+                    /// </summary>
+                    public int MinimumPoints
+                    {
+                        get { return this.GetMinimumPoints(); }
+                    }
+                    /// <summary>
+                    /// The maximum number of data points for the sweep stimulus.
+                    /// </summary>
+                    public int MaximumPoints
+                    {
+                        get { return this.GetMaximumPoints(); }
+                    }
+                    /// <summary>
+                    /// The minimum time in seconds it takes to complete one sweep.
+                    /// </summary>
+                    public double MinimumTime
+                    {
+                        get { return this.GetMinimumTime(); }
+                    }
+                    /// <summary>
+                    /// The maximum time in seconds it takes to complete one sweep.
+                    /// </summary>
+                    public double MaximumTime
+                    {
+                        get { return this.GetMaximumTime(); }
+                    }
+                    /// <summary>
+                    /// Control dwell properties of the sweep.
+                    /// </summary>
+                    public DwellClass Dwell
+                    { get; private set; }
+                    /// <summary>
+                    /// Control the trigger properties of this channel sweep.
+                    /// </summary>
+                    public TriggerClass Trigger
+                    { get; private set; }
+                    /// <summary>
+                    /// Control the pulse properties of this channel.
+                    /// </summary>
+                    public PulseClass Pulse
+                    { get; private set; }
+                    
+                    // Constructor
+                    internal SweepClass(ChannelClass ParentChannel)
+                    {
+                        _parentChannel = ParentChannel;
+                        Dwell = new DwellClass(_parentChannel);
+                        Trigger = new TriggerClass(_parentChannel);
+                        Pulse = new PulseClass(_parentChannel);
+                    }
+
+                    // Private Methods
+                    private bool GetBlocked()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:BLOCked?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _blocked = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                        return _blocked;
+                    }
+                    private SweepGenerationEnum GetGeneration()
+                    {
+                        string retVal;
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:GENeration?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        retVal = _parentChannel._parentPNAX.ReadString();
+                        if (retVal.Contains("STEP")) {
+                            _generation = SweepGenerationEnum.Stepped;
+                        } else {
+                            _generation = SweepGenerationEnum.Analog;
+                        }
+                        return _generation;
+                    }
+                    private void SetGeneration(SweepGenerationEnum Generation)
+                    {
+                        _generation = Generation;
+                        switch (_generation) {
+                            case SweepGenerationEnum.Stepped:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:GENeration STEPped", _parentChannel.Number));
+                                break;
+                            case SweepGenerationEnum.Analog:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:GENeration ANALog", _parentChannel.Number));
+                                break;
+                        }
+                    }
+                    private bool GetPointSweep()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:GENeration:POINtsweep?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _pointSweep = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                        return _pointSweep;
+                    }
+                    private void SetPointSweep(bool PointSweep)
+                    {
+                        _pointSweep = PointSweep;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:GENeration:POINtsweep {1}", _parentChannel.Number, _pointSweep ? "ON" : "OFF"));
+                    }
+                    private SweepModeEnum GetMode()
+                    {
+                        string retVal;
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:MODE?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        retVal = _parentChannel._parentPNAX.ReadString();
+                        if (retVal.Contains("HOLD")) {
+                            _mode = SweepModeEnum.Hold;
+                        } else if (retVal.Contains("CONT")) {
+                            _mode = SweepModeEnum.Continuous;
+                        } else if (retVal.Contains("GRO")) {
+                            _mode = SweepModeEnum.Groups;
+                        } else {
+                            _mode = SweepModeEnum.Single;
+                        }
+                        return _mode;
+                    }
+                    private void SetMode(SweepModeEnum Mode)
+                    {
+                        _mode = Mode;
+                        switch (_mode) {
+                            case SweepModeEnum.Hold:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:MODE HOLD", _parentChannel.Number));
+                                break;
+                            case SweepModeEnum.Continuous:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:MODE CONTinuous", _parentChannel.Number));
+                                break;
+                            case SweepModeEnum.Groups:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:MODE GROups", _parentChannel.Number));
+                                break;
+                            case SweepModeEnum.Single:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:MODE SINGle", _parentChannel.Number));
+                                break;
+                        }
+                    }
+                    private int GetPoints()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:POINts?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _points = (int)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                        return _points;
+                    }
+                    private void SetPoints(int Points)
+                    {
+                        _points = Points;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:POINts {1}", _parentChannel.Number, _points));
+                    }
+                    private bool GetFast()
+                    {
+                        string retVal;
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:SPEed?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        retVal = _parentChannel._parentPNAX.ReadString();
+                        if (retVal.Contains("FAST")) {
+                            _fast = true;
+                        } else {
+                            _fast = false;
+                        }
+                        return _fast;
+                    }
+                    private void SetFast(bool Fast)
+                    {
+                        _fast = Fast;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:SPEed {1}", _parentChannel.Number, _fast ? "FAST" : "NORMal"));
+                    }
+                    private double GetFrequencyStepSize()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:STEP?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _frequencyStepSize = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _frequencyStepSize;
+                    }
+                    private void SetFrequencyStepSize(double FrequencyStepSize)
+                    {
+                        _frequencyStepSize = FrequencyStepSize;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:STEP {1}", _parentChannel.Number, _frequencyStepSize));
+                    }
+                    private double GetTime()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TIME?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _time = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _time;
+                    }
+                    private void SetTime(double Time)
+                    {
+                        _time = Time;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TIME {1}", _parentChannel.Number, _time));
+                    }
+                    private bool GetAutoTime()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TIME:AUTO?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _autoTime = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                        return _autoTime;
+                    }
+                    private void SetAutoTime(bool AutoTime)
+                    {
+                        _autoTime = AutoTime;
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TIME:AUTO {1}", _parentChannel.Number, _autoTime ? "ON" : "OFF"));
+                    }
+                    private SweepTypeEnum GetType()
+                    {
+                        string retVal;
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TYPE?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        retVal = _parentChannel._parentPNAX.ReadString();
+                        if (retVal.Contains("LIN")) {
+                            _type = SweepTypeEnum.Linear;
+                        } else if (retVal.Contains("LOG")) {
+                            _type = SweepTypeEnum.Logarithmic;
+                        } else if (retVal.Contains("POW")) {
+                            _type = SweepTypeEnum.Power;
+                        } else if (retVal.Contains("CW")) {
+                            _type = SweepTypeEnum.CW;
+                        } else if (retVal.Contains("SEGM")) {
+                            _type = SweepTypeEnum.Segment;
+                        } else {
+                            _type = SweepTypeEnum.Phase;
+                        }
+                        return _type;
+                    }
+                    private void SetType(SweepTypeEnum Type)
+                    {
+                        _type = Type;
+                        switch (_type) {
+                            case SweepTypeEnum.Linear:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TYPE LINear", _parentChannel.Number));
+                                break;
+                            case SweepTypeEnum.Logarithmic:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TYPE LOGarithmic", _parentChannel.Number));
+                                break;
+                            case SweepTypeEnum.Power:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TYPE POWer", _parentChannel.Number));
+                                break;
+                            case SweepTypeEnum.CW:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TYPE CW", _parentChannel.Number));
+                                break;
+                            case SweepTypeEnum.Segment:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TYPE SEGMent", _parentChannel.Number));
+                                break;
+                            case SweepTypeEnum.Phase:
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TYPE PHASe", _parentChannel.Number));
+                                break;
+                        }
+                    }
+                    private int GetMinimumPoints()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:POINts? MINimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _minimumPoints = (int)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                        return _minimumPoints;
+                    }
+                    private int GetMaximumPoints()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:POINts? MAXimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _maximumPoints = (int)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                        return _maximumPoints;
+                    }
+                    private double GetMinimumTime()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TIME? MINimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _minimumTime = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _minimumTime;
+                    }
+                    private double GetMaximumTime()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:SWEep:TIME? MAXimum", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        _maximumTime = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                        return _maximumTime;
+                    }
+
+                }
                 public class MeasurementClass {
 
                     // Nested Classes
@@ -1026,6 +2541,13 @@ namespace SCPI {
                         set { this.SetType(value); }
                     }
                     /// <summary>
+                    /// Get the stimulus values for this measurement.
+                    /// </summary>
+                    public double[] XAxisValues
+                    {
+                        get { return this.GetXAxisValues(); }
+                    }
+                    /// <summary>
                     /// Format of the specified measurement
                     /// </summary>
                     public MeasurementFormatEnum Format
@@ -1033,10 +2555,19 @@ namespace SCPI {
                         get { return this.GetFormat(); }
                         set { this.SetFormat(value); }
                     }
+                    /// <summary>
+                    /// Control offset settings of this measurement.
+                    /// </summary>
                     public OffsetClass Offset
                     { get; private set; }
+                    /// <summary>
+                    /// Control smoothing settings of this measurement
+                    /// </summary>
                     public SmoothingClass Smoothing
                     { get; private set; }
+                    /// <summary>
+                    /// Control trace hold settings of this measurement.
+                    /// </summary>
                     public TraceHoldClass Hold
                     { get; private set; }
                     /// <summary>
@@ -1073,6 +2604,23 @@ namespace SCPI {
                             _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentChannel.Number, selectedName));
                         }
 
+                    }
+                    private double[] GetXAxisValues()
+                    {
+                        double[] retVal;
+                        string selectedName = _parentChannel.Measurements.SelectedMeasurementName;
+                        Select();
+
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:X:VALues?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        retVal = (double[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_R8, ",;");
+
+                        if (!String.IsNullOrWhiteSpace(selectedName)) {
+                            _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:SELect {1}", _parentChannel.Number, selectedName));
+                        }
+
+                        return retVal;
                     }
                     private MeasurementFormatEnum GetFormat()
                     {
@@ -1328,9 +2876,29 @@ namespace SCPI {
                 public int Number
                 { get; private set; }
                 /// <summary>
-                /// Control averaging on this channel.
+                /// Control averaging settings on this channel.
                 /// </summary>
                 public AveragingClass Averaging
+                { get; private set; }
+                /// <summary>
+                /// Control frequency settings on this channel.
+                /// </summary>
+                public FrequencyClass Frequency
+                { get; private set; }
+                /// <summary>
+                /// Control IF Bandwidth settings on this channel.
+                /// </summary>
+                public IFBandwidthClass IFBandwidth
+                { get; private set; }
+                /// <summary>
+                /// Control the properties of the sources in this channel
+                /// </summary>
+                public SourceClass Source
+                { get; private set; }
+                /// <summary>
+                /// Control the sweep properties of this channel.
+                /// </summary>
+                public SweepClass Sweep
                 { get; private set; }
                 /// <summary>
                 /// Control measurements on this channel.
@@ -1345,6 +2913,10 @@ namespace SCPI {
                     _parentPNAX = ParentPNAX;
 
                     Averaging = new AveragingClass(this);
+                    Frequency = new FrequencyClass(this);
+                    IFBandwidth = new IFBandwidthClass(this);
+                    Source = new SourceClass(this);
+                    Sweep = new SweepClass(this);
                     Measurements = new MeasurementCollectionClass(this);
                 }
 
@@ -1463,6 +3035,7 @@ namespace SCPI {
                     }
 
                     // TO DO: Add a new channel to the dictionary
+                    // TO DO: When a new channel is added, call to FindPorts in Channel.Source.Ports.FindPorts()
 
                     return availableChannelNumber;
                 }
@@ -2196,6 +3769,16 @@ namespace SCPI {
             public enum ExternalTriggerRouteEnum { Main, Math, Pulse3 };
                 // Averaging
             public enum AveragingModeEnum { Point, Sweep };
+                // Sweep
+            public enum SweepGenerationEnum { Stepped, Analog };
+            public enum SweepModeEnum { Hold, Continuous, Groups, Single };
+            public enum SweepTypeEnum { Linear, Logarithmic, Power, CW, Segment, Phase };
+            public enum SweepTriggerModeEnum { Channel, Sweep, Point, Trace };
+                // Pulse
+            public enum PulseModeEnum { Off, Standard, Profile };
+            public enum PulseDetectionMode { Narrowband, Wideband };
+                // Port
+            public enum PortALCModeEnum { Internal, OpenLoop };
                 // Measurement
             public enum MeasurementFormatEnum { Linear, Logarithmic, Phase, UnwrappedPhase, Imaginary, Real, Polar, Smith, SmithAdmittance, SWR, GroupDelay, Kelvin, Fahrenheit, Celsius };
             public enum TraceHoldTypeEnum { Off, Minimum, Maximum };
