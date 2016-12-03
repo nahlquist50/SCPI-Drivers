@@ -125,6 +125,27 @@ namespace SCPI {
                     FindMaximumFrequency();
                     FindMinimumFrequency();
                 }
+                internal string[] FindInternalPortNames()
+                {
+                    object[] retVals;
+                    List<string> portNames = new List<string>();
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:CAPability:HARDware:PORTs:INTernal:CATalog?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    retVals = (object[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                    foreach (object retVal in retVals) {
+                        portNames.Add(Convert.ToString(retVal));
+                    }
+                    return portNames.ToArray();
+                }
+                internal int ConvertPortNameToNumber(string PortName)
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString(String.Format("SYSTem:CAPability:HARDware:PORTs:PNUMber? '{0}'", PortName));
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    return (int)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                }
+
             }
             public class DisplayClass {
 
@@ -990,9 +1011,221 @@ namespace SCPI {
                     // Nested Classes
                     public class PortClass {
 
+                        // Nested Classes
+                        public class PowerClass {
+
+                            // Variables
+                            private ChannelClass _parentChannel;
+                            private string _portName;
+                            private double _amplitude;
+                            private double _start;
+                            private double _stop;
+                            private double _minimumAmplitude;
+                            private double _maximumAmplitude;
+                            private double _minimumStart;
+                            private double _maximumStart;
+                            private double _minimumStop;
+                            private double _maximumStop;
+
+                            // Properties
+                            /// <summary>
+                            /// RF Power output level
+                            /// </summary>
+                            public double Amplitude
+                            {
+                                get { return this.GetAmplitude(); }
+                                set { this.SetAmplitude(value); }
+                            }
+                            /// <summary>
+                            /// Power sweep start power in dBm for ALL ports being used by the channel.
+                            /// Can set individual port powers by setting Channel.Power.Coupling = false
+                            /// and Channel.Ports["PortName"].Power.Start = value.
+                            /// </summary>
+                            public double Start
+                            {
+                                get { return this.GetStart(); }
+                                set { this.SetStart(value); }
+                            }
+                            /// <summary>
+                            /// Power sweep stop power in dBm for ALL ports being used by the channel.
+                            /// Can set individual port powers by setting Channel.Power.Coupling = false
+                            /// and Channel.Ports["PortName"].Power.Stop = value.
+                            /// </summary>
+                            public double Stop
+                            {
+                                get { return this.GetStop(); }
+                                set { this.SetStop(value); }
+                            }
+                            /// <summary>
+                            /// Minimum RF Power output level
+                            /// </summary>
+                            public double MinimumAmplitude
+                            {
+                                get { return this.GetMinimumAmplitude(); }
+                            }
+                            /// <summary>
+                            /// Maximum RF Power output level
+                            /// </summary>
+                            public double MaximumAmplitude
+                            {
+                                get { return this.GetMaximumAmplitude(); }
+                            }
+                            /// <summary>
+                            /// Minimum start power for power sweep.
+                            /// </summary>
+                            public double MinimumStart
+                            {
+                                get { return this.GetMinimumStart(); }
+                            }
+                            /// <summary>
+                            /// Maximum start power for power sweep.
+                            /// </summary>
+                            public double MaximumStart
+                            {
+                                get { return this.GetMaximumStart(); }
+                            }
+                            /// <summary>
+                            /// Minimum stop power for power sweep.
+                            /// </summary>
+                            public double MinimumStop
+                            {
+                                get { return this.GetMinimumStop(); }
+                            }
+                            /// <summary>
+                            /// Maximum stop power for power sweep.
+                            /// </summary>
+                            public double MaximumStop
+                            {
+                                get { return this.GetMaximumStop(); }
+                            }
+
+                            // Constructor
+                            internal PowerClass(string PortName, ChannelClass ParentChannel)
+                            {
+                                _parentChannel = ParentChannel;
+                                _portName = PortName;
+                            }
+
+                            // Private Methods
+                            private double GetAmplitude()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:LEVel:IMMediate:AMPLitude? '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _amplitude = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _amplitude;
+                            }
+                            private void SetAmplitude(double Amplitude)
+                            {
+                                _amplitude = Amplitude;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:LEVel:IMMediate:AMPLitude {1}, '{2}'", _parentChannel.Number, _amplitude, _portName));
+                            }
+                            private double GetStart()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:PORT:STARt? '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _start = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _start;
+                            }
+                            private void SetStart(double Start)
+                            {
+                                _start = Start;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:PORT:STARt {1}, '{2}'", _parentChannel.Number, _start, _portName));
+                            }
+                            private double GetStop()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:PORT:STOP? '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _stop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _stop;
+                            }
+                            private void SetStop(double Stop)
+                            {
+                                _stop = Stop;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:PORT:STOP {1}, '{2}'", _parentChannel.Number, _stop, _portName));
+                            }
+                            private double GetMinimumAmplitude()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:LEVel:IMMediate:AMPLitude? MINimum, '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _minimumAmplitude = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _minimumAmplitude;
+                            }
+                            private double GetMaximumAmplitude()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:LEVel:IMMediate:AMPLitude? MAXimum, '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _maximumAmplitude = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _maximumAmplitude;
+                            }
+                            private double GetMinimumStart()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:PORT:STARt? MINimum, '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _minimumStart = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _minimumStart;
+                            }
+                            private double GetMaximumStart()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:PORT:STARt? MAXimum, '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _maximumStart = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _maximumStart;
+                            }
+                            private double GetMinimumStop()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:PORT:STOP? MINimum, '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _minimumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _minimumStop;
+                            }
+                            private double GetMaximumStop()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:PORT:STOP? MAXimum, '{1}'", _parentChannel.Number, _portName));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _maximumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _maximumStop;
+                            }
+
+                        }
+                        public class CorrectionClass {
+
+                            // Variables
+                            private ChannelClass _parentChannel;
+
+                            // Properties
+
+
+                            // Constructor
+                            internal CorrectionClass(ChannelClass ParentChannel)
+                            {
+                                _parentChannel = ParentChannel;
+                            }
+
+                            // Private Methods
+
+
+                            // Public Methods
+
+
+                        }
+
                         // Variables
                         private ChannelClass _parentChannel;
+                        private PortModeEnum _mode;
                         private PortALCModeEnum _alcMode;
+                        private bool _autoAttenuation;
+                        private double _attenuation;
+                        private double _minimumAttenuation;
+                        private double _maximumAttenuation;
 
                         // Properties
                         /// <summary>
@@ -1001,6 +1234,25 @@ namespace SCPI {
                         public string Name
                         { get; private set; }
                         /// <summary>
+                        /// The number associated with this port (if the number exists).
+                        /// If not, then returns -1.
+                        /// </summary>
+                        public int Number
+                        { get; internal set; }
+                        /// <summary>
+                        /// State of the source for this port.
+                        /// Auto = Source power is turned on when required for a measurement (default).
+                        /// On = Source power is on regardless of the measurement.
+                        /// Off = Source power is always off regardless of the measurement.
+                        /// NoControl = Do not send OFF commands to the external sources. If an external source is in the OFF state,
+                        /// this option is used to stop sending OFF commands to the external source to increase sweep speed.
+                        /// </summary>
+                        public PortModeEnum Mode
+                        {
+                            get { return this.GetMode(); }
+                            set { this.SetMode(value); }
+                        }
+                        /// <summary>
                         /// Controls the ALC Mode for this port on this channel.
                         /// </summary>
                         public PortALCModeEnum ALCMode
@@ -1008,14 +1260,97 @@ namespace SCPI {
                             get { return this.GetALCMode(); }
                             set { this.SetALCMode(value); }
                         }
+                        /// <summary>
+                        /// Automatic attenuation control on or off.
+                        /// </summary>
+                        public bool AutoAttenuation
+                        {
+                            get { return this.GetAutoAttenuation(); }
+                            set { this.SetAutoAttenuation(value); }
+                        }
+                        /// <summary>
+                        /// Attenuation Level in dB.
+                        /// If ports power is coupled, this will set all other ports as well.
+                        /// PNA-X sets attenuation in quantized step sizes. If an invalid attenuation number
+                        /// is entered, the PNA will select the next lower valid value.
+                        /// </summary>
+                        public double Attenuation
+                        {
+                            get { return this.GetAttenuation(); }
+                            set { this.SetAttenuation(value); }
+                        }
+                        /// <summary>
+                        /// Minimum attenuation Level in dB.
+                        /// </summary>
+                        public double MinimumAttenuation
+                        {
+                            get { return this.GetMinimumAttenuation(); }
+                        }
+                        /// <summary>
+                        /// Maximum attenuation Level in dB.
+                        /// </summary>
+                        public double MaximumAttenuation
+                        {
+                            get { return this.GetMaximumAttenuation(); }
+                        }
+                        /// <summary>
+                        /// Control port specific power settings.
+                        /// </summary>
+                        public PowerClass Power
+                        { get; private set; }
+                        /// <summary>
+                        /// Control source power correction settings.
+                        /// Use this to perform source power calibrations.
+                        /// </summary>
+                        public CorrectionClass Correction
+                        { get; private set; }
 
                         // Constructor
-                        internal PortClass(string Name, ChannelClass ParentChannel)
+                        internal PortClass(string Name, int Number, ChannelClass ParentChannel)
                         {
                             _parentChannel = ParentChannel;
+                            this.Name = Name;
+                            this.Number = Number;
+                            Power = new PowerClass(this.Name, _parentChannel);
                         }
 
                         // Private Methods
+                        private PortModeEnum GetMode()
+                        {
+                            string retVal;
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:MODE? '{1}'", _parentChannel.Number, Name));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            retVal = _parentChannel._parentPNAX.ReadString();
+                            if (retVal.Contains("AUTO")) {
+                                _mode = PortModeEnum.Auto;
+                            } else if (retVal.Contains("ON")) {
+                                _mode = PortModeEnum.On;
+                            } else if (retVal.Contains("OFF")) {
+                                _mode = PortModeEnum.Off;
+                            } else {
+                                _mode = PortModeEnum.NoControl;
+                            }
+                            return _mode;
+                        }
+                        private void SetMode(PortModeEnum Mode)
+                        {
+                            _mode = Mode;
+                            switch (_mode) {
+                                case PortModeEnum.Auto:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:MODE AUTO, '{1}'", _parentChannel.Number, Name));
+                                    break;
+                                case PortModeEnum.On:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:MODE ON, '{1}'", _parentChannel.Number, Name));
+                                    break;
+                                case PortModeEnum.Off:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:MODE OFF, '{1}'", _parentChannel.Number, Name));
+                                    break;
+                                case PortModeEnum.NoControl:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:MODE NOCTL, '{1}'", _parentChannel.Number, Name));
+                                    break;
+                            }
+                        }
                         private PortALCModeEnum GetALCMode()
                         {
                             string retVal;
@@ -1042,12 +1377,297 @@ namespace SCPI {
                                     break;
                             }
                         }
+                        private bool GetAutoAttenuation()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ATTenuation:AUTO? '{1}'", _parentChannel.Number, Name));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _autoAttenuation = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _autoAttenuation;
+                        }
+                        private void SetAutoAttenuation(bool AutoAttenuation)
+                        {
+                            _autoAttenuation = AutoAttenuation;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ATTenuation:AUTO {1}, '{2}'", _parentChannel.Number, _autoAttenuation ? "ON" : "OFF", Name));
+                        }
+                        private double GetAttenuation()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ATTenuation? '{1}'", _parentChannel.Number, Name));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _attenuation = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _attenuation;
+                        }
+                        private void SetAttenuation(double Attenuation)
+                        {
+                            _attenuation = Attenuation;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ATTenuation {1}, '{2}'", _parentChannel.Number, _attenuation, Name));
+                        }
+                        private double GetMinimumAttenuation()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ATTenuation? MINimum, '{1}'", _parentChannel.Number, Name));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _minimumAttenuation = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _minimumAttenuation;
+                        }
+                        private double GetMaximumAttenuation()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:ATTenuation? MAXimum, '{1}'", _parentChannel.Number, Name));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _maximumAttenuation = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _maximumAttenuation;
+                        }
+
                     }
                     public class PortCollectionClass : IEnumerable<PortClass> {
 
+                        // Nested Classes
+                        public class PowerClass {
+
+                            // Variables
+                            private ChannelClass _parentChannel;
+                            private bool _coupling;
+                            private double _center;
+                            private double _span;
+                            private double _start;
+                            private double _stop;
+                            private double _slope;
+                            private bool _slopeState;
+                            private double _minimumStart;
+                            private double _maximumStart;
+                            private double _minimumStop;
+                            private double _maximumStop;
+
+                            // Properties
+                            /// <summary>
+                            /// Port Power Coupling on or off.
+                            /// </summary>
+                            public bool Coupling
+                            {
+                                get { return this.GetCoupling(); }
+                                set { this.SetCoupling(value); }
+                            }
+                            /// <summary>
+                            /// Power sweep center power in dBm. Must also set Channel.Sweep.Type = Power.
+                            /// </summary>
+                            public double Center
+                            {
+                                get { return this.GetCenter(); }
+                                set { this.SetCenter(value); }
+                            }
+                            /// <summary>
+                            /// Power sweep span power in dBm. Must also set Channel.Sweep.Type = Power
+                            /// </summary>
+                            public double Span
+                            {
+                                get { return this.GetSpan(); }
+                                set { this.SetSpan(value); }
+                            }
+                            /// <summary>
+                            /// Power sweep start power in dBm for ALL ports being used by the channel.
+                            /// Can set individual port powers by setting Channel.Power.Coupling = false
+                            /// and Channel.Ports["PortName"].Power.Start = value.
+                            /// </summary>
+                            public double Start
+                            {
+                                get { return this.GetStart(); }
+                                set { this.SetStart(value); }
+                            }
+                            /// <summary>
+                            /// Power sweep stop power in dBm for ALL ports being used by the channel.
+                            /// Can set individual port powers by setting Channel.Power.Coupling = false
+                            /// and Channel.Ports["PortName"].Power.Stop = value.
+                            /// </summary>
+                            public double Stop
+                            {
+                                get { return this.GetStop(); }
+                                set { this.SetStop(value); }
+                            }
+                            /// <summary>
+                            /// RF Power slope in dB/GHz.
+                            /// Must be between -2 and 2. (0 = no slope).
+                            /// </summary>
+                            public double Slope
+                            {
+                                get { return this.GetSlope(); }
+                                set { this.SetSlope(value); }
+                            }
+                            /// <summary>
+                            /// Turn on or off power slope.
+                            /// </summary>
+                            public bool SlopeState
+                            {
+                                get { return this.GetSlopeState(); }
+                                set { this.SetSlopeState(value); }
+                            }
+                            /// <summary>
+                            /// Minimum start power for power sweep.
+                            /// </summary>
+                            public double MinimumStart
+                            {
+                                get { return this.GetMinimumStart(); }
+                            }
+                            /// <summary>
+                            /// Maximum start power for power sweep.
+                            /// </summary>
+                            public double MaximumStart
+                            {
+                                get { return this.GetMaximumStart(); }
+                            }
+                            /// <summary>
+                            /// Minimum stop power for power sweep.
+                            /// </summary>
+                            public double MinimumStop
+                            {
+                                get { return this.GetMinimumStop(); }
+                            }
+                            /// <summary>
+                            /// Maximum stop power for power sweep.
+                            /// </summary>
+                            public double MaximumStop
+                            {
+                                get { return this.GetMaximumStop(); }
+                            }
+
+                            // Constructor
+                            internal PowerClass(ChannelClass ParentChannel)
+                            {
+                                _parentChannel = ParentChannel;
+                            }
+
+                            // Private Methods
+                            private bool GetCoupling()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:COUPle?", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _coupling = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                                return _coupling;
+                            }
+                            private void SetCoupling(bool Coupling)
+                            {
+                                _coupling = Coupling;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:COUPle {1}", _parentChannel.Number, _coupling ? "ON" : "OFF"));
+                            }
+                            private double GetCenter()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:CENTer?", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _center = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _center;
+                            }
+                            private void SetCenter(double Center)
+                            {
+                                _center = Center;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:CENTer {1}", _parentChannel.Number, _center));
+                            }
+                            private double GetSpan()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:SPAN?", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _span = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _span;
+                            }
+                            private void SetSpan(double Span)
+                            {
+                                _span = Span;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:SPAN {1}", _parentChannel.Number, _span));
+                            }
+                            private double GetStart()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:STARt?", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _start = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _start;
+                            }
+                            private void SetStart(double Start)
+                            {
+                                _start = Start;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:STARt {1}", _parentChannel.Number, _start));
+                            }
+                            private double GetStop()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:STOP?", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _stop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _stop;
+                            }
+                            private void SetStop(double Stop)
+                            {
+                                _stop = Stop;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:STOP {1}", _parentChannel.Number, _stop));
+                            }
+                            private double GetSlope()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:LEVel:SLOPe?", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _slope = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _slope;
+                            }
+                            private void SetSlope(double Slope)
+                            {
+                                _slope = Slope;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:LEVel:SLOPe {1}", _parentChannel.Number, _slope));
+                            }
+                            private bool GetSlopeState()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:LEVel:SLOPe:STATe?", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _slopeState = (((byte)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                                return _slopeState;
+                            }
+                            private void SetSlopeState(bool SlopeState)
+                            {
+                                _slopeState = SlopeState;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:LEVel:SLOPe:STATe {1}", _parentChannel.Number, _slopeState ? "ON" : "OFF"));
+                            }
+                            private double GetMinimumStart()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:STARt? MINimum", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _minimumStart = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _minimumStart;
+                            }
+                            private double GetMaximumStart()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:STARt? MAXimum", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _maximumStart = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _maximumStart;
+                            }
+                            private double GetMinimumStop()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:STOP? MINimum", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _minimumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _minimumStop;
+                            }
+                            private double GetMaximumStop()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:POWer:STOP? MAXimum", _parentChannel.Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _maximumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                                return _maximumStop;
+                            }
+
+                        }
+
                         // Variables
                         private ChannelClass _parentChannel;
-                        private Dictionary<string, PortClass> _ports;
+                        private Dictionary<string, PortClass> _portsByName;
+                        private Dictionary<int, PortClass> _portsByNumber;
 
                         // Properties
                         /// <summary>
@@ -1055,58 +1675,94 @@ namespace SCPI {
                         /// </summary>
                         public int Count
                         {
-                            get { return this._ports.Count; }
+                            get { return this._portsByName.Count; }
                         }
                         /// <summary>
-                        /// Names of the ports that can be controlled
+                        /// Names of the ports that can be controlled.
                         /// </summary>
                         public string[] Names
                         {
-                            get { return this._ports.Keys.ToArray(); }
+                            get { return this._portsByName.Keys.ToArray(); }
                         }
+                        /// <summary>
+                        /// Numbers of the ports that can be controlled.
+                        /// Not all ports have numbers (i.e. an external source port only has a name). So this
+                        /// array will be less than or equal to in length to the Names array.
+                        /// </summary>
+                        public int[] Numbers
+                        {
+                            get { return this._portsByNumber.Keys.ToArray(); }
+                        }
+                        /// <summary>
+                        /// Control power settings of all ports on this channel.
+                        /// </summary>
+                        public PowerClass Power
+                        { get; private set; }
 
                         // Constructor
                         internal PortCollectionClass(ChannelClass ParentChannel)
                         {
                             _parentChannel = ParentChannel;
-                            _ports = new Dictionary<string, PortClass>();
+                            _portsByName = new Dictionary<string, PortClass>();
+                            Power = new PowerClass(_parentChannel);
                         }
 
                         // Indexer
+                        /// <summary>
+                        /// Get the port by name.
+                        /// </summary>
                         public PortClass this[string Name]
                         {
                             get
                             {
-                                if (!_ports.ContainsKey(Name))
+                                if (!_portsByName.ContainsKey(Name))
                                     throw new IndexOutOfRangeException("Port name does not exist for this channel.");
 
-                                return _ports[Name];
+                                return _portsByName[Name];
                             }
                         }
+                        /// <summary>
+                        /// Get the port by number.
+                        /// </summary>
+                        public PortClass this[int Number]
+                        {
+                            get
+                            {
+                                if (!_portsByNumber.ContainsKey(Number))
+                                    throw new IndexOutOfRangeException("Port number does not exist for this channel.");
 
-                        // Private Methods
-                        
+                                return _portsByNumber[Number];
+                            }
+                        }
 
                         // Internal Methods
                         internal void FindPorts()
                         {
                             object[] retVals;
                             string portName;
+                            int portNumber;
+                            string[] internalPortNames = _parentChannel._parentPNAX.Capabilities.FindInternalPortNames();
                             _parentChannel._parentPNAX.ClearEventRegisters();
                             _parentChannel._parentPNAX.WriteString(String.Format("SOURce{0}:CATalog?", _parentChannel.Number));
                             _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
                             retVals = (object[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
-                            _ports.Clear();
+                            _portsByName.Clear();
+                            _portsByNumber.Clear();
                             foreach (object retVal in retVals) {
                                 portName = Convert.ToString(retVal);
-                                _ports.Add(portName, new PortClass(portName, _parentChannel));
+                                _portsByName.Add(portName, new PortClass(portName, -1, _parentChannel));
+                                if (internalPortNames.Contains(portName)) {
+                                    portNumber = _parentChannel._parentPNAX.Capabilities.ConvertPortNameToNumber(portName);
+                                    _portsByNumber.Add(portNumber, _portsByName[portName]);
+                                    _portsByNumber[portNumber].Number = portNumber;
+                                }
                             }
                         }
 
                         // Public Methods
                         public IEnumerator<PortClass> GetEnumerator()
                         {
-                            return _ports.Values.GetEnumerator();
+                            return _portsByName.Values.GetEnumerator();
                         }
 
                         // Unused Interface Methods
@@ -1132,9 +1788,6 @@ namespace SCPI {
                         _parentChannel = ParentChannel;
                         Ports = new PortCollectionClass(_parentChannel);
                     }
-
-                    // Private Methods
-
 
                 }
                 public class SweepClass {
@@ -3779,6 +4432,7 @@ namespace SCPI {
             public enum PulseDetectionMode { Narrowband, Wideband };
                 // Port
             public enum PortALCModeEnum { Internal, OpenLoop };
+            public enum PortModeEnum { Auto, On, Off, NoControl };
                 // Measurement
             public enum MeasurementFormatEnum { Linear, Logarithmic, Phase, UnwrappedPhase, Imaginary, Real, Polar, Smith, SmithAdmittance, SWR, GroupDelay, Kelvin, Fahrenheit, Celsius };
             public enum TraceHoldTypeEnum { Off, Minimum, Maximum };
