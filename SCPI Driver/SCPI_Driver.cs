@@ -234,6 +234,17 @@ namespace SCPI {
             } while ((((int)stb & 0x10) != 0x10) && _continueWaiting);
             _continueWaiting = true;
         }
+        protected virtual void WaitFunction_Operation()
+        {
+            // poll the Standard Event bit in the status byte
+            short stb;
+            _continueWaiting = true;
+            WriteString("*OPC");
+            do {
+                stb = ReadStatusByte();
+            } while ((((int)stb & 0x20) != 0x20) && _continueWaiting);
+            _continueWaiting = true;
+        }
         protected virtual void StopWaiting()
         {
             _continueWaiting = false;
@@ -245,6 +256,24 @@ namespace SCPI {
         protected virtual void WaitForMeasurementToComplete(int Milliseconds)
         {
             Thread WaitThread = new Thread(this.WaitFunction_Measurement);
+            WaitThread.Start();
+            while (!WaitThread.IsAlive) { }
+            if (Milliseconds > 0) {
+                if (!WaitThread.Join(Milliseconds)) {
+                    StopWaiting();
+                }
+            } else if (Milliseconds == 0) {
+                StopWaiting();
+            } else {
+                WaitThread.Join();
+            }
+        }
+        /// <summary>
+        /// Waits for the system operation to complete. (may not be compatible with all instrument types).
+        /// </summary>
+        protected virtual void WaitForOperationToComplete(int Milliseconds)
+        {
+            Thread WaitThread = new Thread(this.WaitFunction_Operation);
             WaitThread.Start();
             while (!WaitThread.IsAlive) { }
             if (Milliseconds > 0) {

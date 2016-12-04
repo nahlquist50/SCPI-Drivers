@@ -12,6 +12,16 @@ namespace SCPI {
 
     namespace NetworkAnalyzerDrivers {
 
+        public class testc {
+            private PNAX myPNAX;
+            public testc()
+            {
+                myPNAX = new PNAX();
+                myPNAX.Initialize("ad", 3000);
+
+            }
+        }
+
         public class PNAX : SCPIDriver {
 
             // Nested Classes
@@ -376,6 +386,22 @@ namespace SCPI {
                         calKits.Add(Convert.ToString(retVal));
                     }
                     return calKits.ToArray();
+                }
+                /// <summary>
+                /// Main = Launches the Calibration Wizard which matches the active channel.
+                /// CalKit = Launches the Version 2 Calibration Kit File Manager dialog box.
+                /// </summary>
+                /// <param name="CalibrationWizard"></param>
+                public void LaunchCalibrationWizard(CalibrationWizardEnum CalibrationWizard)
+                {
+                    switch (CalibrationWizard) {
+                        case CalibrationWizardEnum.Main:
+                            _parentPNAX.WriteString("SYSTem:CORRection:WIZard:IMMediate MAIN");
+                            break;
+                        case CalibrationWizardEnum.CalKit:
+                            _parentPNAX.WriteString("SYSTem:CORRection:WIZard:IMMediate MAIN");
+                            break;
+                    }
                 }
 
             }
@@ -1063,6 +1089,7 @@ namespace SCPI {
                 private PNAX _parentPNAX;
                 private bool _enable;
                 private bool _visible;
+                private bool _touchscreenState;
                 private GridLineTypeEnum _gridLineType;
 
                 // Properties
@@ -1083,6 +1110,17 @@ namespace SCPI {
                     get { return this.GetVisible(); }
                     set { this.SetVisible(value); }
                 }
+                /// <summary>
+                /// Enables (true) or disables (false) the PNA-X touchscreen.
+                /// </summary>
+                public bool TouchscreenState
+                {
+                    get { return this.GetTouchscreenState(); }
+                    set { this.SetTouchscreenState(value); }
+                }
+                /// <summary>
+                /// The type of grid lines on the display.
+                /// </summary>
                 public GridLineTypeEnum GridLineType
                 {
                     get { return this.GetGridLineType(); }
@@ -1127,6 +1165,19 @@ namespace SCPI {
                 {
                     _visible = Visible;
                     _parentPNAX.WriteString(String.Format("DISPlay:VISible {0}", _visible ? "ON" : "OFF"));
+                }
+                private bool GetTouchscreenState()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SYSTem:TOUChscreen:STATe?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    _touchscreenState = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                    return _touchscreenState;
+                }
+                private void SetTouchscreenState(bool TouchscreenState)
+                {
+                    _touchscreenState = TouchscreenState;
+                    _parentPNAX.WriteString(String.Format("SYSTem:TOUChscreen:STATe {0}", _touchscreenState ? "ON" : "OFF"));
                 }
                 private GridLineTypeEnum GetGridLineType()
                 {
@@ -1469,17 +1520,140 @@ namespace SCPI {
                 // Nested Classes
                 public class PathClass {
 
+                    // Nested Classes
+                    public class ElementClass {
+
+                        // Variables
+                        private ChannelClass _parentChannel;
+                        private string _setting;
+
+                        // Properties
+                        /// <summary>
+                        /// The Name of this element.
+                        /// </summary>
+                        public string Name
+                        { get; private set; }
+                        /// <summary>
+                        /// The current setting of this element.
+                        /// </summary>
+                        public string Setting
+                        {
+                            get { return this.GetSetting(); }
+                            set { this.SetSetting(value); }
+                        }
+                        /// <summary>
+                        /// The valid settings that can be used with this element.
+                        /// </summary>
+                        public string[] ValidSettings
+                        {
+                            get { return this.GetValidSettings(); }
+                        }
+
+                        // Constructor
+                        internal ElementClass(string Name, ChannelClass ParentChannel)
+                        {
+                            this.Name = Name;
+                            _parentChannel = ParentChannel;
+                        }
+
+                        // Private Methods
+                        public string[] GetValidSettings()
+                        {
+                            object[] retVals;
+                            List<string> settings = new List<string>();
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:VALue:CATalog? '{1}'", _parentChannel.Number, Name));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            retVals = (object[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                            foreach (object retVal in retVals) {
+                                settings.Add(Convert.ToString(retVal));
+                            }
+                            return settings.ToArray();
+                        }
+                        public string GetSetting()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:STATe? '{1}'", _parentChannel.Number, Name));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            _setting = _parentChannel._parentPNAX.ReadString();
+                            return _setting;
+                        }
+                        public void SetSetting(string Setting)
+                        {
+                            _setting = Setting;
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:STATe '{1}', '{2}'", _parentChannel.Number, Name, _setting));
+                        }
+
+                    }
+                    public class ElementCollectionClass : IEnumerable<ElementClass> {
+
+                        // Variables
+                        private ChannelClass _parentChannel;
+                        private Dictionary<string, ElementClass> _elements;
+
+                        // Properties
+                        /// <summary>
+                        /// Number of configurable elements.
+                        /// </summary>
+                        public int Count
+                        {
+                            get { return this._elements.Count(); }
+                        }
+                        /// <summary>
+                        /// The names of the elemenets available to configure.
+                        /// </summary>
+                        public string[] Names
+                        {
+                            get { return this._elements.Keys.ToArray(); }
+                        }
+
+                        // Constructor
+                        internal ElementCollectionClass(ChannelClass ParentChannel);
+
+                        // Indexer
+                        public ElementClass this[string Name]
+                        {
+                            get
+                            {
+                                if (!_elements.ContainsKey(Name))
+                                    throw new IndexOutOfRangeException("Element does not exist.");
+                                return _elements[Name];
+                            }
+                        }
+                        
+                        // Internal Methods
+                        internal void FindElements()
+                        {
+                            object[] retVals;
+                            string elementName;
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:CATalog?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            retVals = (object[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                            _elements.Clear();
+                            foreach (object retVal in retVals) {
+                                elementName = Convert.ToString(retVal);
+                                _elements.Add(elementName, new ElementClass(elementName, _parentChannel));
+                            }
+                        }
+
+                        // Public Methods
+                        public IEnumerator<ElementClass> GetEnumerator()
+                        {
+                            return _elements.Values.GetEnumerator();
+                        }
+
+                        // Unused Methods
+                        IEnumerator IEnumerable.GetEnumerator()
+                        {
+                            throw new NotImplementedException();
+                        }
+                    }
+
                     // Variables
                     private ChannelClass _parentChannel;
 
                     // Properties
-                    /// <summary>
-                    /// Returns the names of configurable elements.
-                    /// </summary>
-                    public string[] Elements
-                    {
-                        get { return this.GetElements(); }
-                    }
                     /// <summary>
                     /// Returns the current configuration name only if NO element settings had been changed since last selecting or storing a configuration.
                     /// </summary>
@@ -1487,27 +1661,20 @@ namespace SCPI {
                     {
                         get { return this.GetConfigurationName(); }
                     }
+                    /// <summary>
+                    /// Configure elements on this channel.
+                    /// </summary>
+                    public ElementCollectionClass Elements
+                    { get; private set; }
 
                     // Constructor
                     internal PathClass(ChannelClass ParentChannel)
                     {
                         _parentChannel = ParentChannel;
+                        Elements = new ElementCollectionClass(_parentChannel);
                     }
 
                     // Private Methods
-                    private string[] GetElements()
-                    {
-                        object[] retVals;
-                        List<string> elements = new List<string>();
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:CATalog?", _parentChannel.Number));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        retVals = (object[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
-                        foreach (object retVal in retVals) {
-                            elements.Add(Convert.ToString(retVal));
-                        }
-                        return elements.ToArray();
-                    }
                     private string GetConfigurationName()
                     {
                         _parentChannel._parentPNAX.ClearEventRegisters();
@@ -1524,41 +1691,7 @@ namespace SCPI {
                     public void Copy(int CopyFromChannelNumber)
                     {
                         _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:COPY {1}", _parentChannel.Number, CopyFromChannelNumber));
-                    }
-                    /// <summary>
-                    /// Returns the valid settings that can be used with the specified element.
-                    /// </summary>
-                    /// <param name="Element"></param>
-                    /// <returns></returns>
-                    public string[] GetValidElementSettings(string Element)
-                    {
-                        object[] retVals;
-                        List<string> elements = new List<string>();
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:VALue:CATalog? '{1}'", _parentChannel.Number, Element));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        retVals = (object[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
-                        foreach (object retVal in retVals) {
-                            elements.Add(Convert.ToString(retVal));
-                        }
-                        return elements.ToArray();
-                    }
-                    /// <summary>
-                    /// Gets the current setting of the specified element.
-                    /// </summary>
-                    public string GetElementSetting(string Element)
-                    {
-                        _parentChannel._parentPNAX.ClearEventRegisters();
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:STATe? '{1}'", _parentChannel.Number, Element));
-                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
-                        return _parentChannel._parentPNAX.ReadString();
-                    }
-                    /// <summary>
-                    /// Sets the element setting.
-                    /// </summary>
-                    public void SetElementSetting(string Element, string Setting)
-                    {
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:STATe '{1}', '{2}'", _parentChannel.Number, Element, Setting));
+                        _parentChannel.Path.Elements.FindElements();
                     }
                     /// <summary>
                     /// Loads the named configuration onto this channel.
@@ -1568,7 +1701,15 @@ namespace SCPI {
                     /// <param name="ConfigurationName"></param>
                     public void LoadConfiguration(string ConfigurationName)
                     {
-                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:SELect '{1}'", _parentChannel.Number, Configura   ));
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:SELect '{1}'", _parentChannel.Number, ConfigurationName));
+                        _parentChannel.Path.Elements.FindElements();
+                    }
+                    /// <summary>
+                    /// Saves the path configuration currently associated with the channel to the specified ConfigurationName.
+                    /// </summary>
+                    public void StoreConfiguration(string ConfigurationName)
+                    {
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:STORe '{1}'", _parentChannel.Number, ConfigurationName));
                     }
 
                 }
@@ -5060,6 +5201,7 @@ namespace SCPI {
                     // TO DO: Add a new channel to the dictionary
                     // TO DO: When a new channel is added, call to FindPorts in Channel.Source.Ports.FindPorts()
                     // TO DO: When a new channel is added, call to FindPorts in Channel.Correction.Guided.Ports.FindPorts()
+                    // TO DO: When a new channel is added, call to FindElements in Channel.Path.Elements.FindElements()
 
                     return availableChannelNumber;
                 }
@@ -5116,6 +5258,7 @@ namespace SCPI {
             public enum ExternalTriggerTypeEnum { Edge, Level };
             public enum ExternalTriggerRouteEnum { Main, Math, Pulse3 };
                 // Calibration
+            public enum CalibrationWizardEnum { Main, CalKit };
             public enum GuidedCalibrationSyncEnum { Synchronous, Asynchronous };
             public enum GuidedCalibrationIsolationEnum { All, None, Add, Remove };
             public enum GuidedCalibrationSavePreferenceEnum { CalRegister, UserCalSet, Reuse };
@@ -5236,9 +5379,38 @@ namespace SCPI {
                 base.Initialize(GPIBAddress, Timeout);
                 Capabilities.FindCapabilities();
             }
+            /// <summary>
+            /// Deletes all traces, measurements, and windows. Resets the analyzer to factory defined
+            /// default settings. Creates an S11 measurement named "CH1_S11_1"; For this reason, it is
+            /// recommended to reset the PNA using FullPreset() so that all Channels, Windows, etc. will
+            /// be managed by this driver.
+            /// </summary>
             public override void Reset()
             {
+                base.Reset();
+                // TO DO: Reset ALL configured channels, windows, etc.
+            }
+            /// <summary>
+            /// Performs essentially the same function as Reset() except
+            /// this function does NOT reset DataFormat to ASCii as does Reset()
+            /// </summary>
+            public void Preset()
+            {
+                WriteString("SYSTem:PRESet");
+                // TO DO: Reset ALL configured channels, windows, etc.
+            }
+            /// <summary>
+            /// A full preset performs a standard Preset(), then deletes the default trace, measurement and window.
+            /// The PNA screen becomes blank.  This is the recommended way to reset the PNA when using this driver.
+            /// </summary>
+            public void FullPreset()
+            {
                 WriteString("SYSTem:FPReset");
+                // TO DO: Reset ALL configured channels, windows, etc.
+            }
+            public void WaitForOperationsToComplete(int Timeout)
+            {
+
             }
         }
 
