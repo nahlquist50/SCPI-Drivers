@@ -147,7 +147,917 @@ namespace SCPI {
                 }
 
             }
+            public class CorrectionClass {
+
+                // Nested Classes
+                public class CalSetsClass {
+
+                    // Variables
+                    private PNAX _parentPNAX;
+
+                    // Properties
+                    /// <summary>
+                    /// Returns the names of Cal Sets currently stored on the PNA.
+                    /// </summary>
+                    public string[] CalSetNames
+                    {
+                        get { return this.GetCalSetNames(); }
+                    }
+
+                    // Constructor
+                    internal CalSetsClass(PNAX ParentPNAX)
+                    {
+                        _parentPNAX = ParentPNAX;
+                    }
+
+                    // Private Methods
+                    private string[] GetCalSetNames()
+                    {
+                        object[] retVals;
+                        List<string> calSetNames = new List<string>();
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString("CSET:CATalog?");
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        retVals = (object[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                        foreach (object retVal in retVals) {
+                            calSetNames.Add(Convert.ToString(retVal));
+                        }
+                        return calSetNames.ToArray();
+                    }
+
+                    // Public Methods
+                    /// <summary>
+                    /// Creates a new cal set and copies the current cal set data into it.
+                    /// </summary>
+                    public void Copy(string CalSetToCopy, string CalSetToCreate)
+                    {
+                        _parentPNAX.WriteString(String.Format("CSET:COPY '{0}', '{1}'", CalSetToCopy, CalSetToCreate));
+                    }
+                    /// <summary>
+                    /// Returns whether or not the specified CalSet exists on the PNA.
+                    /// </summary>
+                    /// <param name="CalSet"></param>
+                    /// <returns></returns>
+                    public bool Exists(string CalSet)
+                    {
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString(String.Format("CSET:EXISts? '{0}'", CalSet));
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        return (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                    }
+                    /// <summary>
+                    /// Deletes the Cal Set from the PNA.
+                    /// If the Cal Set is currently in use by a channel, the Cal Set is deleted and correction for that channel is turned off.
+                    /// </summary>
+                    /// <param name="CalSet"></param>
+                    public void Delete(string CalSet)
+                    {
+                        _parentPNAX.WriteString(String.Format("CSET:DEL '{0}'", CalSet));
+                    }
+                    /// <summary>
+                    /// Deletes all cal sets from the PNA, including phase reference and Global Delta Match Cal Sets.
+                    /// </summary>
+                    public void DeleteAll()
+                    {
+                        _parentPNAX.WriteString("CSET:DALL");
+                    }
+                    /// <summary>
+                    /// Returns the date that the specified Cal Set was last saved.
+                    /// If operation failed, returns:
+                    /// new DateTime(1,1,1,0,0,0);
+                    /// </summary>
+                    public DateTime LastSavedDateAndTime(string CalSet)
+                    {
+                        DateTime date;
+                        int[] retVals1;
+                        int[] retVals2;
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString(String.Format("CSET:DATE? '{0}'", CalSet));
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        retVals1 = (int[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString(String.Format("CSET:TIME? '{0}'", CalSet));
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        retVals2 = (int[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
+                        if (retVals1.Length > 2 && retVals2.Length > 2) {
+                            date = new DateTime(retVals1[0], retVals1[1], retVals1[2], retVals2[0], retVals2[1], retVals2[0]);
+                        } else {
+                            date = new DateTime(1,1,1,0,0,0);
+                        }
+                        return date;
+                    }
+
+                }
+
+                // Variables
+                private PNAX _parentPNAX;
+                private bool _channelMode;
+                private GuidedCalibrationSavePreferenceEnum _savePreference;
+
+                // Properties
+                /// <summary>
+                /// Determines whether or not the channel calibration will be honored (true)
+                /// or if legacy behavior will be active (false).
+                /// This should be set to true when using this driver. This property is only here
+                /// for advanced users.
+                /// </summary>
+                public bool ChannelMode
+                {
+                    get { return this.GetChannelMode(); }
+                    set { this.SetChannelMode(value); }
+                }
+                /// <summary>
+                /// Specifies the default manner in which calibrations performed using this driver are saved.
+                /// Cal data is ALWAYS stored to the channel Cal Register regardless of this setting.
+                /// CalRegister = Each cal is saved ONLY to the channel Cal Register. If the error terms from a new Cal can co-exist with those in the Cal Register, they are appended.
+                /// UserCalSet = Each cal is saved to its own new User Cal Set file. The Cal Set name is automatically generated.
+                /// Reuse = The cal is saved to the cal set that is currently selected on the channel. If the channel does not yet have a selected Cal Set, the cal will be saved to a new User Cal Set.
+                /// </summary>
+                public GuidedCalibrationSavePreferenceEnum SavePreference
+                {
+                    get { return this.GetSavePreference(); }
+                    set { this.SetSavePreference(value); }
+                }
+                /// <summary>
+                /// Returns an array of valid connectors based on the connector descriptions of the available cal kits.
+                /// Use an item from this array to specify a connector for Channel.Correction.Guided.Port("item").
+                /// An example of a connector type is "APC 3.5 female"
+                /// </summary>
+                public string[] ValidConnectors
+                {
+                    get { return this.GetValidConnectors(); }
+                }
+                /// <summary>
+                /// Manage Cal Sets on the PNA
+                /// </summary>
+                public CalSetsClass CalSets
+                { get; private set; }
+
+                // Constructor
+                internal CorrectionClass(PNAX ParentPNAX)
+                {
+                    _parentPNAX = ParentPNAX;
+                    CalSets = new CalSetsClass(_parentPNAX);
+                }
+
+                // Private Methods
+                private bool GetChannelMode()
+                {
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SENSe:CORRection:COLLect:GUIDed:CHANnel:MODE?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    _channelMode = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                    return _channelMode;
+                }
+                private void SetChannelMode(bool ChannelMode)
+                {
+                    _channelMode = ChannelMode;
+                    _parentPNAX.WriteString(String.Format("SENSe:CORRection:COLLect:GUIDed:CHANnel:MODE {0}", _channelMode ? "ON" : "OFF"));
+                }
+                private GuidedCalibrationSavePreferenceEnum GetSavePreference()
+                {
+                    string retVal;
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SENSe:CORRection:PREFerence:CSET:SAVE?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    retVal = _parentPNAX.ReadString();
+                    if (retVal.Contains("CALR")) {
+                        _savePreference = GuidedCalibrationSavePreferenceEnum.CalRegister;
+                    } else if (retVal.Contains("USER")) {
+                        _savePreference = GuidedCalibrationSavePreferenceEnum.UserCalSet;
+                    } else {
+                        _savePreference = GuidedCalibrationSavePreferenceEnum.Reuse;
+                    }
+                    return _savePreference;
+                }
+                private void SetSavePreference(GuidedCalibrationSavePreferenceEnum SavePreference)
+                {
+                    _savePreference = SavePreference;
+                    switch (_savePreference) {
+                        case GuidedCalibrationSavePreferenceEnum.CalRegister:
+                            _parentPNAX.WriteString("SENSe:CORRection:PREFerence:CSET:SAVE CALRegister");
+                            break;
+                        case GuidedCalibrationSavePreferenceEnum.UserCalSet:
+                            _parentPNAX.WriteString("SENSe:CORRection:PREFerence:CSET:SAVE USER");
+                            break;
+                        case GuidedCalibrationSavePreferenceEnum.Reuse:
+                            _parentPNAX.WriteString("SENSe:CORRection:PREFerence:CSET:SAVE REUSe");
+                            break;
+                    }
+                }
+                private string[] GetValidConnectors()
+                {
+                    object[] retVals;
+                    List<string> validConnectors = new List<string>();
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString("SENSe:CORRection:COLLect:GUIDed:CONNector:CATalog?");
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    retVals = (object[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                    foreach (object retVal in retVals) {
+                        validConnectors.Add(Convert.ToString(retVal));
+                    }
+                    return validConnectors.ToArray();
+                }
+
+                // Public Methods
+                /// <summary>
+                /// Returns a string array of valid cal kits that use the specified connector type.
+                /// Find the connector types using PNAX.Correction.ValidConnectors.
+                /// </summary>
+                public string[] FindCalKitsUsingConnector(string Connector)
+                {
+                    object[] retVals;
+                    List<string> calKits = new List<string>();
+                    _parentPNAX.ClearEventRegisters();
+                    _parentPNAX.WriteString(String.Format("SENSe:CORRection:COLLect:GUIDed:CKIT:CATalog? '{0}'", Connector));
+                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                    retVals = (object[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                    foreach (object retVal in retVals) {
+                        calKits.Add(Convert.ToString(retVal));
+                    }
+                    return calKits.ToArray();
+                }
+
+            }
             public class DisplayClass {
+
+                // Nested Classes
+                public class WindowClass {
+
+                    // Nested Classes
+                    public class TraceClass {
+
+                        // Variables
+                        internal WindowClass _parentWindow;
+                        private bool _memory;
+                        private bool _display;
+                        private string _title;
+                        private bool _titleState;
+                        private double _perDivision;
+                        private double _minimumPerDivision;
+                        private double _maximumPerDivision;
+                        private double _referenceLevel;
+                        private double _minimumReferenceLevel;
+                        private double _maximumReferenceLevel;
+                        private int _referencePosition;
+                        private int _minimumReferencePosition;
+                        private int _maximumReferencePosition;
+
+                        // Properties
+                        /// <summary>
+                        /// Number of the trace within the window. Not the measurement number on the PNAX display.
+                        /// </summary>
+                        public int Number
+                        { get; private set; }
+                        /// <summary>
+                        /// The measurement attached to this trace.
+                        /// </summary>
+                        public PNAX.ChannelClass.MeasurementClass AttachedMeasurement
+                        { get; private set; }
+                        /// <summary>
+                        /// Enable or disable the memory trace.
+                        /// </summary>
+                        public bool Memory
+                        {
+                            get { return this.GetMemory(); }
+                            set { this.SetMemory(value); }
+                        }
+                        /// <summary>
+                        /// Turn on or off the trace on the display.
+                        /// </summary>
+                        public bool Display
+                        {
+                            get { return this.GetDisplay(); }
+                            set { this.SetDisplay(value); }
+                        }
+                        /// <summary>
+                        /// Title of the trace that shows up on the PNAX display.
+                        /// </summary>
+                        public string Title
+                        {
+                            get { return this.GetTitle(); }
+                            set { this.SetTitle(value); }
+                        }
+                        /// <summary>
+                        /// Enable or disable the displaying of the title.
+                        /// </summary>
+                        public bool TitleState
+                        {
+                            get { return this.GetTitleState(); }
+                            set { this.SetTitleState(value); }
+                        }
+                        /// <summary>
+                        /// Y Axis Per Division Value.
+                        /// </summary>
+                        public double PerDivision
+                        {
+                            get { return this.GetPerDivision(); }
+                            set { this.SetPerDivision(value); }
+                        }
+                        /// <summary>
+                        /// Current minimum Y Axis Per Division Value
+                        /// </summary>
+                        public double MinimumPerDivision
+                        {
+                            get { return this.GetMinimumPerDivision(); }
+                        }
+                        /// <summary>
+                        /// Current maximum Y Axis Per Division Value
+                        /// </summary>
+                        public double MaximumPerDivision
+                        {
+                            get { return this.GetMaximumPerDivision(); }
+                        }
+                        /// <summary>
+                        /// Y Axis Reference Level
+                        /// </summary>
+                        public double ReferenceLevel
+                        {
+                            get { return this.GetReferenceLevel(); }
+                            set { this.SetReferenceLevel(value); }
+                        }
+                        /// <summary>
+                        /// Current Minimum Y Axis Reference Level
+                        /// </summary>
+                        public double MinimumReferenceLevel
+                        {
+                            get { return this.GetMinimumReferenceLevel(); }
+                        }
+                        /// <summary>
+                        /// Current Maximum Y Axis Reference Level
+                        /// </summary>
+                        public double MaximumReferenceLevel
+                        {
+                            get { return this.GetMaximumReferenceLevel(); }
+                        }
+                        /// <summary>
+                        /// Y Axis Reference Position
+                        /// </summary>
+                        public int ReferencePosition
+                        {
+                            get { return this.GetReferencePosition(); }
+                            set { this.SetReferencePosition(value); }
+                        }
+                        /// <summary>
+                        /// Current Minimum Y Axis Reference Position
+                        /// </summary>
+                        public int MinimumReferencePosition
+                        {
+                            get { return this.GetMinimumReferencePosition(); }
+                        }
+                        /// <summary>
+                        /// Current Maximum Y Axis Reference Position
+                        /// </summary>
+                        public int MaximumReferencePosition
+                        {
+                            get { return this.GetMaximumReferencePosition(); }
+                        }
+
+                        // Constructor
+                        internal TraceClass(WindowClass ParentWindow, int Number, PNAX.ChannelClass.MeasurementClass AttachedMeasurment)
+                        {
+                            _parentWindow = ParentWindow;
+                            this.Number = Number;
+                            this.AttachedMeasurement = AttachedMeasurement;
+                        }
+
+                        // Private Methods
+                        private bool GetMemory()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:MEMory:STATe?", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _memory = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _memory;
+                        }
+                        private void SetMemory(bool Memory)
+                        {
+                            _memory = Memory;
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:MEMory:STATe {2}", _parentWindow.Number, Number, _memory ? "ON" : "OFF"));
+                        }
+                        private bool GetDisplay()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:STATe?", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _display = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _display;
+                        }
+                        private void SetDisplay(bool Display)
+                        {
+                            _display = Display;
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:STATe {2}", _parentWindow.Number, Number, _display ? "ON" : "OFF"));
+                        }
+                        private string GetTitle()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:DATA?", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _title = _parentWindow._parentPNAX.ReadString();
+                            return _title;
+                        }
+                        private void SetTitle(string Title)
+                        {
+                            _title = Title;
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:DATA {2}", _parentWindow.Number, Number, _title));
+                        }
+                        private bool GetTitleState()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:STATe?", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _titleState = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                            return _titleState;
+                        }
+                        private void SetTitleState(bool TitleState)
+                        {
+                            _titleState = TitleState;
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:STATe {2}", _parentWindow.Number, Number, _titleState ? "ON" : "OFF"));
+                        }
+                        private double GetPerDivision()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision?", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _perDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _perDivision;
+                        }
+                        private void SetPerDivision(double PerDivision)
+                        {
+                            _perDivision = PerDivision;
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision {2}", _parentWindow.Number, Number, _perDivision));
+                        }
+                        private double GetMinimumPerDivision()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision? MINimum", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _minimumPerDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _minimumPerDivision;
+                        }
+                        private double GetMaximumPerDivision()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision? MAXimum", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _maximumPerDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _maximumPerDivision;
+                        }
+                        private double GetReferenceLevel()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel?", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _referenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _referenceLevel;
+                        }
+                        private void SetReferenceLevel(double ReferenceLevel)
+                        {
+                            _referenceLevel = ReferenceLevel;
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel {2}", _parentWindow.Number, Number, _referenceLevel));
+                        }
+                        private double GetMinimumReferenceLevel()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel? MINimum", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _minimumReferenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _minimumReferenceLevel;
+                        }
+                        private double GetMaximumReferenceLevel()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel? MAXimum", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _maximumReferenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
+                            return _maximumReferenceLevel;
+                        }
+                        private int GetReferencePosition()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition?", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _referencePosition = (int)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                            return _referencePosition;
+                        }
+                        private void SetReferencePosition(int ReferencePosition)
+                        {
+                            _referencePosition = ReferencePosition;
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition {2}", _parentWindow.Number, Number, _referencePosition));
+                        }
+                        private int GetMinimumReferencePosition()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition? MINimum", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _minimumReferencePosition = (int)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                            return _minimumReferencePosition;
+                        }
+                        private int GetMaximumReferencePosition()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition? MAXimum", _parentWindow.Number, Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            _maximumReferencePosition = (int)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                            return _maximumReferencePosition;
+                        }
+
+                        // Public Methods
+                        /// <summary>
+                        /// Select this trace as the active trace.
+                        /// </summary>
+                        public void Select()
+                        {
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:SELect", _parentWindow.Number, Number));
+                        }
+                        /// <summary>
+                        /// Auto scale Y axis.
+                        /// </summary>
+                        public void AutoScaleY()
+                        {
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:AUTO", _parentWindow.Number, Number));
+                        }
+
+                    }
+                    public class TraceCollectionClass {
+
+                        // Variables
+                        private WindowClass _parentWindow;
+                        private Dictionary<int, TraceClass> _traces;
+
+                        // Properties
+                        /// <summary>
+                        /// Number of traces in this window managed by this driver.
+                        /// </summary>
+                        public int Count
+                        {
+                            get { return _traces.Count; }
+                        }
+                        /// <summary>
+                        /// Trace Numbers in this window managed by this driver.
+                        /// </summary>
+                        public int[] ManagedTraceNumbers
+                        {
+                            get { return this._traces.Keys.ToArray(); }
+                        }
+                        /// <summary>
+                        /// All open trace numbers in the window in the PNAX. Not all traces are necessarily managed by this driver.
+                        /// i.e. If a trace was created locally using the front panel, this driver does not manage its use.
+                        /// </summary>
+                        public int[] OpenTraceNumbers
+                        {
+                            get { return this.GetOpenTraceNumbers(); }
+                        }
+
+                        // Constructor
+                        internal TraceCollectionClass(WindowClass ParentWindow)
+                        {
+                            _parentWindow = ParentWindow;
+                        }
+
+                        // Indexer
+                        public TraceClass this[int TraceNumber]
+                        {
+                            get
+                            {
+                                if (!_traces.ContainsKey(TraceNumber))
+                                    throw new System.ArgumentException("Trace does not exist", "TraceNumber");
+
+                                return _traces[TraceNumber];
+                            }
+                        }
+
+                        // Protected Methods
+                        protected virtual int[] GetOpenTraceNumbers()
+                        {
+                            _parentWindow._parentPNAX.ClearEventRegisters();
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:CATalog?", _parentWindow.Number));
+                            _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
+                            return (int[])_parentWindow._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
+
+                        }
+
+                        // Public Methods
+                        /// <summary>
+                        /// Adds a new trace with the next available trace number and attaches the measurement.
+                        /// </summary>
+                        /// <returns>
+                        /// The trace number of the newly created trace.
+                        /// Returns -1, if the maximum number of traces is reached.
+                        /// </returns>
+                        public int Add(PNAX.ChannelClass.MeasurementClass AttachedMeasurement)
+                        {
+                            int availableTraceNumber = 1;
+                            int[] openTraceNumbers = OpenTraceNumbers;
+
+                            if (openTraceNumbers.Length == _parentWindow._parentPNAX.Capabilities.MaximumTracesPerWindow)
+                                return -1;
+
+                            for (int i = 0; i < openTraceNumbers.Length; i++) {
+                                if (!openTraceNumbers.Contains(i + 1)) {
+                                    availableTraceNumber = i + 1;
+                                    break;
+                                }
+                            }
+
+                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:FEED {2}", _parentWindow.Number, availableTraceNumber, AttachedMeasurement.Name));
+                            _traces.Add(availableTraceNumber, new TraceClass(_parentWindow, availableTraceNumber, AttachedMeasurement));
+
+                            return availableTraceNumber;
+                        }
+                        /// <summary>
+                        /// Deletes the specified trace from the collection and destroys the trace on the PNAX.
+                        /// </summary>
+                        /// <returns>True if the trace is deleted. False if the specified trace number doesn't exist.</returns>
+                        public bool Delete(int TraceNumber)
+                        {
+                            if (_traces.ContainsKey(TraceNumber)) {
+                                _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, TraceNumber));
+                                _traces.Remove(TraceNumber);
+                                return true;
+                            } else if (OpenTraceNumbers.Contains(TraceNumber)) {
+                                _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, TraceNumber));
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                        /// <summary>
+                        /// Iterates through all open trace numbers and deletes them.
+                        /// </summary>
+                        public void DeleteAll()
+                        {
+                            List<int> allNumbers = new List<int>(OpenTraceNumbers);
+                            foreach (int number in allNumbers) {
+                                _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, number));
+                            }
+                            _traces.Clear();
+                        }
+
+                    }
+
+                    // Variables
+                    private PNAX _parentPNAX;
+                    private bool _scaleCoupling;
+                    private string _title;
+                    private bool _titleState;
+
+                    // Properties
+                    /// <summary>
+                    /// Number of this window.
+                    /// </summary>
+                    public int Number
+                    { get; private set; }
+                    /// <summary>
+                    /// Enable or disable scale coupling for this window.
+                    /// </summary>
+                    public bool ScaleCoupling
+                    {
+                        get { return this.GetScaleCoupling(); }
+                        set { this.SetScaleCoupling(value); }
+                    }
+                    /// <summary>
+                    /// Title to be displayed in the window title area.
+                    /// </summary>
+                    public string Title
+                    {
+                        get { return this.GetTitle(); }
+                        set { this.SetTitle(value); }
+                    }
+                    /// <summary>
+                    /// Enable or disable displaying of the title.
+                    /// </summary>
+                    public bool TitleState
+                    {
+                        get { return this.GetTitleState(); }
+                        set { this.SetTitleState(value); }
+                    }
+                    /// <summary>
+                    /// Control Traces in this window.
+                    /// </summary>
+                    public TraceCollectionClass Traces
+                    { get; private set; }
+
+                    // Constructor
+                    internal WindowClass(int Number, PNAX ParentPNAX)
+                    {
+                        this.Number = Number;
+                        _parentPNAX = ParentPNAX;
+
+                        Traces = new TraceCollectionClass(this);
+                    }
+
+                    // Private Methods
+                    private bool GetScaleCoupling()
+                    {
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe:Y:SCALe:COUPle:STATe?", Number));
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        _scaleCoupling = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                        return _scaleCoupling;
+                    }
+                    private void SetScaleCoupling(bool ScaleCoupling)
+                    {
+                        _scaleCoupling = ScaleCoupling;
+                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe:Y:SCALe:COUPle:STATe {1}", Number, _scaleCoupling ? "ON" : "OFF"));
+                    }
+                    private string GetTitle()
+                    {
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:DATA?", Number));
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        _title = _parentPNAX.ReadString();
+                        return _title;
+                    }
+                    private void SetTitle(string Title)
+                    {
+                        if (Title.Length > 50)
+                            Title = Title.Substring(0, 50);
+
+                        _title = Title;
+                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:DATA {1}", Number, _title));
+                    }
+                    private bool GetTitleState()
+                    {
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:STATe?", Number));
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        _titleState = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
+                        return _titleState;
+                    }
+                    private void SetTitleState(bool TitleState)
+                    {
+                        _titleState = TitleState;
+                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:STATe {1}", Number, _titleState ? "ON" : "OFF"));
+                    }
+
+                }
+                public class WindowCollectionClass : IEnumerable<WindowClass> {
+
+                    // Variables
+                    private PNAX _parentPNAX;
+                    private Dictionary<int, WindowClass> _windows;
+                    private ScaleCouplingMethodEnum _scaleCouplingMethod;
+
+                    // Properties
+                    /// <summary>
+                    /// Number of windows managed by this driver.
+                    /// </summary>
+                    public int Count
+                    {
+                        get { return this._windows.Count; }
+                    }
+                    /// <summary>
+                    /// Window Numbers managed by this driver.
+                    /// </summary>
+                    public int[] ManagedWindowNumbers
+                    {
+                        get { return this._windows.Keys.ToArray(); }
+                    }
+                    /// <summary>
+                    /// All open window numbers on the PNAX. Not all windows are necessarily managed by this driver.
+                    /// i.e. If a window was created locally using the front panel, this driver does not manage its use.
+                    /// </summary>
+                    public int[] OpenWindowNumbers
+                    {
+                        get { return this.GetOpenWindowNumbers(); }
+                    }
+                    /// <summary>
+                    /// Coupling method for trace scaling.
+                    /// Off = No coupling.
+                    /// Window = Scale settings are coupled for traces in each window.
+                    /// All = Scale settings are coupled for traces in all selected windows. Setting controlled by coupling state of each window.
+                    /// </summary>
+                    public ScaleCouplingMethodEnum ScaleCouplingMethod
+                    {
+                        get { return this.GetScaleCouplingMethod(); }
+                        set { this.SetScaleCouplingMethod(value); }
+                    }
+
+                    // Constructor
+                    internal WindowCollectionClass(PNAX ParentPNAX)
+                    {
+                        _parentPNAX = ParentPNAX;
+                    }
+
+                    // Indexer
+                    public WindowClass this[int Number]
+                    {
+                        get
+                        {
+                            if (!_windows.ContainsKey(Number))
+                                throw new System.IndexOutOfRangeException("Window Number does not exist or is not managed by this driver.");
+
+                            return _windows[Number];
+                        }
+                    }
+
+                    // Private Methods
+                    private int[] GetOpenWindowNumbers()
+                    {
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString("SYSTem:WINDows:CATalog?");
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        return (int[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
+                    }
+                    private ScaleCouplingMethodEnum GetScaleCouplingMethod()
+                    {
+                        string retVal;
+                        _parentPNAX.ClearEventRegisters();
+                        _parentPNAX.WriteString("DISPlay:WINDow:TRACe:Y:SCALe:COUPle:METHod?");
+                        _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
+                        retVal = _parentPNAX.ReadString();
+                        if (retVal.Contains("OFF")) {
+                            _scaleCouplingMethod = ScaleCouplingMethodEnum.Off;
+                        } else if (retVal.Contains("WIND")) {
+                            _scaleCouplingMethod = ScaleCouplingMethodEnum.Window;
+                        } else {
+                            _scaleCouplingMethod = ScaleCouplingMethodEnum.All;
+                        }
+                        return _scaleCouplingMethod;
+                    }
+                    private void SetScaleCouplingMethod(ScaleCouplingMethodEnum ScaleCouplingMethod)
+                    {
+                        _scaleCouplingMethod = ScaleCouplingMethod;
+                        switch (_scaleCouplingMethod) {
+                            case ScaleCouplingMethodEnum.Off:
+                                _parentPNAX.WriteString("DISPlay:WINDow:TRACe:Y:SCALe:COUPle:METHod OFF");
+                                break;
+                            case ScaleCouplingMethodEnum.Window:
+                                _parentPNAX.WriteString("DISPlay:WINDow:TRACe:Y:SCALe:COUPle:METHod WINDow");
+                                break;
+                            case ScaleCouplingMethodEnum.All:
+                                _parentPNAX.WriteString("DISPlay:WINDow:TRACe:Y:SCALe:COUPle:METHod ALL");
+                                break;
+                        }
+                    }
+
+                    // Public Methods
+                    /// <summary>
+                    /// Adds a new window with the next available window number.
+                    /// </summary>
+                    /// <returns>
+                    /// The window number of the newly created channel.
+                    /// If the maximum number of windows is reached, returns -1.
+                    /// </returns>
+                    public int Add()
+                    {
+                        int availableWindowNumber = 1;
+                        int[] openWindowNumbers = OpenWindowNumbers;
+
+                        if (openWindowNumbers.Length == _parentPNAX.Capabilities.MaximumWindows)
+                            return -1;
+
+                        for (int i = 0; i < openWindowNumbers.Length; i++) {
+                            if (!openWindowNumbers.Contains(i + 1)) {
+                                availableWindowNumber = i + 1;
+                                break;
+                            }
+                        }
+
+                        // TO DO: Add a new window to the dictionary
+
+                        return availableWindowNumber;
+                    }
+                    /// <summary>
+                    /// Deletes the specified window number from the collection and destroys the window on the PNAX.
+                    /// </summary>
+                    /// <returns>True if the window is deleted. False if the specified window number doesn't exist.</returns>
+                    public bool Delete(int WindowNumber)
+                    {
+                        if (_windows.ContainsKey(WindowNumber)) {
+                            _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", WindowNumber));
+                            _windows.Remove(WindowNumber);
+                            return true;
+                        } else if (OpenWindowNumbers.Contains(WindowNumber)) {
+                            _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", WindowNumber));
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    /// <summary>
+                    /// Iterates through all open window numbers and deletes them.
+                    /// </summary>
+                    public void DeleteAll()
+                    {
+                        List<int> allNumbers = new List<int>(OpenWindowNumbers);
+                        foreach (int number in allNumbers) {
+                            _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", number));
+                        }
+                        _windows.Clear();
+                    }
+                    public IEnumerator<WindowClass> GetEnumerator()
+                    {
+                        return _windows.Values.GetEnumerator();
+                    }
+
+                    // Unused Interface Methods
+                    IEnumerator IEnumerable.GetEnumerator()
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
 
                 // Variables
                 private PNAX _parentPNAX;
@@ -178,11 +1088,17 @@ namespace SCPI {
                     get { return this.GetGridLineType(); }
                     set { this.SetGridLineType(value); }
                 }
+                /// <summary>
+                /// Control the windows of the PNAX.
+                /// </summary>
+                public WindowCollectionClass Windows
+                { get; private set; }
                 
                 // Constructor
                 internal DisplayClass(PNAX ParentPNAX)
                 {
                     _parentPNAX = ParentPNAX;
+                    Windows = new WindowCollectionClass(_parentPNAX);
                 }
 
                 // Private Methods
@@ -551,6 +1467,111 @@ namespace SCPI {
             public class ChannelClass {
 
                 // Nested Classes
+                public class PathClass {
+
+                    // Variables
+                    private ChannelClass _parentChannel;
+
+                    // Properties
+                    /// <summary>
+                    /// Returns the names of configurable elements.
+                    /// </summary>
+                    public string[] Elements
+                    {
+                        get { return this.GetElements(); }
+                    }
+                    /// <summary>
+                    /// Returns the current configuration name only if NO element settings had been changed since last selecting or storing a configuration.
+                    /// </summary>
+                    public string ConfigurationName
+                    {
+                        get { return this.GetConfigurationName(); }
+                    }
+
+                    // Constructor
+                    internal PathClass(ChannelClass ParentChannel)
+                    {
+                        _parentChannel = ParentChannel;
+                    }
+
+                    // Private Methods
+                    private string[] GetElements()
+                    {
+                        object[] retVals;
+                        List<string> elements = new List<string>();
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:CATalog?", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        retVals = (object[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                        foreach (object retVal in retVals) {
+                            elements.Add(Convert.ToString(retVal));
+                        }
+                        return elements.ToArray();
+                    }
+                    private string GetConfigurationName()
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:NAME", _parentChannel.Number));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        return _parentChannel._parentPNAX.ReadString();
+                    }
+
+                    // Public Methods
+                    /// <summary>
+                    /// Copies the mechanical switch and attenuator settings from the specified channel to this channel.
+                    /// </summary>
+                    /// <param name="CopyFromChannelNumber"></param>
+                    public void Copy(int CopyFromChannelNumber)
+                    {
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:COPY {1}", _parentChannel.Number, CopyFromChannelNumber));
+                    }
+                    /// <summary>
+                    /// Returns the valid settings that can be used with the specified element.
+                    /// </summary>
+                    /// <param name="Element"></param>
+                    /// <returns></returns>
+                    public string[] GetValidElementSettings(string Element)
+                    {
+                        object[] retVals;
+                        List<string> elements = new List<string>();
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:VALue:CATalog? '{1}'", _parentChannel.Number, Element));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        retVals = (object[])_parentChannel._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_Any, ",;");
+                        foreach (object retVal in retVals) {
+                            elements.Add(Convert.ToString(retVal));
+                        }
+                        return elements.ToArray();
+                    }
+                    /// <summary>
+                    /// Gets the current setting of the specified element.
+                    /// </summary>
+                    public string GetElementSetting(string Element)
+                    {
+                        _parentChannel._parentPNAX.ClearEventRegisters();
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:STATe? '{1}'", _parentChannel.Number, Element));
+                        _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                        return _parentChannel._parentPNAX.ReadString();
+                    }
+                    /// <summary>
+                    /// Sets the element setting.
+                    /// </summary>
+                    public void SetElementSetting(string Element, string Setting)
+                    {
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:ELEMent:STATe '{1}', '{2}'", _parentChannel.Number, Element, Setting));
+                    }
+                    /// <summary>
+                    /// Loads the named configuration onto this channel.
+                    /// Loading a stored configuration will over-write MANY RF and IF path configuration settings.
+                    /// Make your measurement settings AFTER recalling a stored configuration, NOT before.
+                    /// </summary>
+                    /// <param name="ConfigurationName"></param>
+                    public void LoadConfiguration(string ConfigurationName)
+                    {
+                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:PATH:CONFig:SELect '{1}'", _parentChannel.Number, Configura   ));
+                    }
+
+                }
                 public class AveragingClass {
 
                     // Variables
@@ -1194,27 +2215,6 @@ namespace SCPI {
                                 _maximumStop = (double)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
                                 return _maximumStop;
                             }
-
-                        }
-                        public class CorrectionClass {
-
-                            // Variables
-                            private ChannelClass _parentChannel;
-
-                            // Properties
-
-
-                            // Constructor
-                            internal CorrectionClass(ChannelClass ParentChannel)
-                            {
-                                _parentChannel = ParentChannel;
-                            }
-
-                            // Private Methods
-
-
-                            // Public Methods
-
 
                         }
 
@@ -2807,6 +3807,365 @@ namespace SCPI {
                     }
 
                 }
+                public class CorrectionClass {
+                    
+                    // Nested Classes
+                    public class GuidedClass {
+
+                        // Nested Classes
+                        public class PortClass {
+
+                            // Variables
+                            private ChannelClass _parentChannel;
+                            private string _connector;
+                            private string _calKit;
+
+                            // Properties
+                            /// <summary>
+                            /// Number of this port.
+                            /// </summary>
+                            public int Number
+                            { get; private set; }
+                            /// <summary>
+                            /// Connector type of this port. If not used for this calibration, set to "Not used"
+                            /// </summary>
+                            public string Connector
+                            {
+                                get { return this.GetConnector(); }
+                                set { this.SetConnector(value); }
+                            }
+                            /// <summary>
+                            /// The calibration kit (mechanical or ECal) for this port to be used during a Guided Calibration.
+                            /// </summary>
+                            public string CalKit
+                            {
+                                get { return this.GetCalKit(); }
+                                set { this.SetCalKit(value); }
+                            }
+
+                            // Constructor
+                            internal PortClass(int Number, ChannelClass ParentChannel)
+                            {
+                                this.Number = Number;
+                                _parentChannel = ParentChannel;
+                            }
+
+                            // Private Methods
+                            private string GetConnector()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:CONNector:PORT{1}:SELect?", _parentChannel.Number, Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _connector = _parentChannel._parentPNAX.ReadString();
+                                return _connector;
+                            }
+                            private void SetConnector(string Connector)
+                            {
+                                _connector = Connector;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:CONNector:PORT{1}:SELect '{2}'", _parentChannel.Number, Number, _connector));
+                            }
+                            private string GetCalKit()
+                            {
+                                _parentChannel._parentPNAX.ClearEventRegisters();
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:CKIT:PORT{1}:SELect?", _parentChannel.Number, Number));
+                                _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                                _calKit = _parentChannel._parentPNAX.ReadString();
+                                return _calKit;
+                            }
+                            private void SetCalKit(string CalKit)
+                            {
+                                _calKit = CalKit;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:CKIT:PORT{1}:SELect '{2}'", _parentChannel.Number, Number, _calKit));
+                            }
+
+                        }
+                        public class PortCollectionClass : IEnumerable<PortClass> {
+
+                            // Variables
+                            private ChannelClass _parentChannel;
+                            private Dictionary<int, PortClass> _ports;
+
+                            // Properties
+                            /// <summary>
+                            /// Number of ports that can be used by this Guided calibration.
+                            /// </summary>
+                            public int Count
+                            {
+                                get { return this._ports.Count; }
+                            }
+                            /// <summary>
+                            /// The numbers of the ports.
+                            /// </summary>
+                            public int[] Numbers
+                            {
+                                get { return this._ports.Keys.ToArray(); }
+                            }
+
+                            // Constructor
+                            internal PortCollectionClass(ChannelClass ParentChannel)
+                            {
+                                _parentChannel = ParentChannel;
+                            }
+
+                            // Indexer
+                            public PortClass this[int Number]
+                            {
+                                get
+                                {
+                                    if (!_ports.ContainsKey(Number))
+                                        throw new IndexOutOfRangeException("This number port doesn't exist");
+
+                                    return _ports[Number];
+                                }
+                            }
+
+                            // Internal Methods
+                            internal void FindPorts()
+                            {
+                                List<int> portNumbers = new List<int>();
+                                string[] internalPortNames = _parentChannel._parentPNAX.Capabilities.FindInternalPortNames();
+                                foreach (string portName in internalPortNames) {
+                                    portNumbers.Add(_parentChannel._parentPNAX.Capabilities.ConvertPortNameToNumber(portName));
+                                }
+                                portNumbers.Sort();
+                                _ports.Clear();
+                                foreach (int portNumber in portNumbers) {
+                                    _ports.Add(portNumber, new PortClass(portNumber, _parentChannel));
+                                }
+                            }
+
+                            // Public Methods
+                            public IEnumerator<PortClass> GetEnumerator()
+                            {
+                                return this._ports.Values.GetEnumerator();
+                            }
+
+                            // Unused Interface Methods
+                            IEnumerator IEnumerable.GetEnumerator()
+                            {
+                                throw new NotImplementedException();
+                            }
+                        }
+
+                        // Variables
+                        private ChannelClass _parentChannel;
+
+                        // Properties
+                        /// <summary>
+                        /// Ports controlled in this guided calibration.
+                        /// </summary>
+                        public PortCollectionClass Ports
+                        { get; private set; }
+                        
+                        // Constructor
+                        internal GuidedClass(ChannelClass ParentChannel)
+                        {
+                            _parentChannel = ParentChannel;
+                            Ports = new PortCollectionClass(_parentChannel);
+                        }
+
+                        // Private Methods
+
+                        // Public Methods
+                        /// <summary>
+                        /// Aborts the acquiring of a guided calibration that has been Initialized but has not yet been concluded using the Save command.
+                        /// If at least one Cal standard has already been measured, and the Calibration Window is being displayed, this command also closes
+                        /// the Calibration Window and re-tiles the other measurement windows.
+                        /// </summary>
+                        public void Abort()
+                        {
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:ABORt", _parentChannel.Number));
+                        }
+                        /// <summary>
+                        /// Initiates the measurement of the specified calibration step. Executing this command with an unnecessary step has no effect.
+                        /// </summary>
+                        /// <param name="Step">
+                        /// The number of the cal step connection steps for the calibration.
+                        /// </param>
+                        /// <param name="Sync">
+                        /// Synchronous = Blocks SCPI commands during standard measurement (default).
+                        /// Asynchronous = Does not block SCPI commands during standard measurement. (Generally for advanced users).
+                        /// </param>
+                        public void Acquire(int Step, GuidedCalibrationSyncEnum Sync = GuidedCalibrationSyncEnum.Synchronous)
+                        {
+                            switch (Sync) {
+                                case GuidedCalibrationSyncEnum.Synchronous:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:ACQuire STAN{1}, 'SYNChronous'", _parentChannel.Number, Step));
+                                    break;
+                                case GuidedCalibrationSyncEnum.Asynchronous:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:ACQuire STAN{1}, 'ASYNchronous'", _parentChannel.Number, Step));
+                                    break;
+                            }
+                        }
+                        /// <summary>
+                        /// Returns the connection description for the specified calibration step.
+                        /// </summary>
+                        public string GetStepDescription(int Step)
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:DESCription? {1}"));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            return _parentChannel._parentPNAX.ReadString();
+                        }
+                        /// <summary>
+                        /// Initiates a guided calibration. Use this to start a guided calibration, then query the number of steps, issue Acquire(...) commands.
+                        /// </summary>
+                        /// <param name="ExistingCalSetName">
+                        /// Existing Cal Set name or GUID. The Cal Set is either supplemented or overwritten depending on the method, connectors, and ports selected.
+                        /// If no Cal Set name is specified, the behavior depends on the Save Preference setting.
+                        /// </param>
+                        /// <param name="CalSetNameIsGUID">
+                        /// False = If ExistingCalSetName is a name.
+                        /// True = If ExistingCalSetName is a GUID (less common).
+                        /// </param>
+                        /// <param name="ChangeStimulusSettings">
+                        /// If ExistingCalSetName stimulus settings differ from the existing channel, do (true) or do not (false, default) change the stimulus settings.
+                        /// </param>
+                        /// <param name="Sync">
+                        /// Synchronous = Blocks SCPI commands while processing this command (default).
+                        /// Asynchronous = Does not block SCPI commands while processing this command. (Generally for advanced users).
+                        /// </param>
+                        public void Initiate(string ExistingCalSetName = null, bool CalSetNameIsGUID = false, bool ChangeStimulusSettings = false, GuidedCalibrationSyncEnum Sync = GuidedCalibrationSyncEnum.Synchronous)
+                        {
+                            if (String.IsNullOrEmpty(ExistingCalSetName)) {
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:INITiate:IMMediate", _parentChannel.Number));
+                            } else {
+                                ExistingCalSetName = CalSetNameIsGUID ? String.Format("{{{0}}}", ExistingCalSetName) : ExistingCalSetName;
+                                switch (Sync) {
+                                    case GuidedCalibrationSyncEnum.Synchronous:
+                                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:INITiate:IMMediate '{1}', {2}, SYNChronous", _parentChannel.Number, ExistingCalSetName, ChangeStimulusSettings ? "ON" : "OFF"));
+                                        break;
+                                    case GuidedCalibrationSyncEnum.Asynchronous:
+                                        _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:INITiate:IMMediate '{1}', {2}, ASYNchronous", _parentChannel.Number, ExistingCalSetName, ChangeStimulusSettings ? "ON" : "OFF"));
+                                        break;
+                                }
+                            }
+                        }
+                        /// <summary>
+                        /// Specify the paths (port pairs) to make isolation measurements on during a guided calibration.
+                        /// </summary>
+                        /// <param name="Isolation">
+                        /// All = Measure isolation on all pairings of the ports that are to be calibrated.
+                        /// None = Do not measure isolation on any pairing of the ports to be measured.
+                        /// Add = Add one or more specific pairings of ports to the list of ports pairings for which isolation will be measured.
+                        /// Remove = Remove one or more specific pairings of ports from the list of port pairings for which isolation will be measured. If many paths are to be measured,
+                        /// it may be easier to first send All, then Remove and specify the paths to remove.
+                        /// </param>
+                        /// <param name="PortNumbers">
+                        /// For use when Isolation = Add or Remove.
+                        /// Specify port numbers in pairs (i.e. new int[] {1, 2, 1, 3} will specify isolation paths port 1 to port 2 and port 1 to port 3.
+                        /// For 3-port calibrations, specify up to 3 pairs.
+                        /// For 4-port calibrations, specify up to 6 pairs.
+                        /// </param>
+                        public void SpecifyIsolationPaths(GuidedCalibrationIsolationEnum Isolation = GuidedCalibrationIsolationEnum.All, int[] PortNumbers = null)
+                        {
+                            StringBuilder ports;
+                            switch (Isolation) {
+                                case GuidedCalibrationIsolationEnum.All:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:GUIDed:ISOLation:PATHs ALL", _parentChannel.Number));
+                                    break;
+                                case GuidedCalibrationIsolationEnum.None:
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:GUIDed:ISOLation:PATHs NONE", _parentChannel.Number));
+                                    break;
+                                case GuidedCalibrationIsolationEnum.Add:
+                                    if (PortNumbers == null || PortNumbers.Length % 2 != 0)
+                                        throw new System.ArgumentException("PortNumbers is either null or not divisible by two.", "PortNumbers");
+                                    ports = new StringBuilder();
+                                    for (int i = 0; i < PortNumbers.Length; i++) {
+                                        ports.AppendFormat("{0},", PortNumbers[i]);
+                                    }
+                                    ports.Remove(ports.Length - 1, 1);
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:GUIDed:ISOLation:PATHs ADD,{1}", _parentChannel.Number, ports.ToString()));
+                                    break;
+                                case GuidedCalibrationIsolationEnum.Remove:
+                                    if (PortNumbers == null || PortNumbers.Length % 2 != 0)
+                                        throw new System.ArgumentException("PortNumbers is either null or not divisible by two.", "PortNumbers");
+                                    ports = new StringBuilder();
+                                    for (int i = 0; i < PortNumbers.Length; i++) {
+                                        ports.AppendFormat("{0},", PortNumbers[i]);
+                                    }
+                                    ports.Remove(ports.Length - 1, 1);
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:GUIDed:ISOLation:PATHs ADD,{1}", _parentChannel.Number, ports.ToString()));
+                                    break;
+                            }
+                        }
+                        /// <summary>
+                        /// Resets the specified guided cal connection step as unmeasured. This clears all previous measurements made for that step.
+                        /// </summary>
+                        public void ResetStep(int Step)
+                        {
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:ITERations:RESet {1}", _parentChannel.Number, Step));
+                        }
+                        /// <summary>
+                        /// Completes the guided cal by computing the error terms and turning correction ON.
+                        /// <param name="CalSetNameIsGUID">
+                        /// False = If ExistingCalSetName is a name.
+                        /// True = If ExistingCalSetName is a GUID (less common).
+                        /// </param>
+                        /// <param name="ExistingCalSetName">
+                        /// If ExistingCalSetName is specified, the cal set will be saved to this name.
+                        /// If ExistingCalSetName is not specified And...
+                        /// </param>
+                        /// <param name="defaultToSavePreference">
+                        /// If defaultToSavePreference = true, the behavior will default to the preference set at PNAX.Correction.SavePreference
+                        /// If defaultToSavePreference = false, the behavior will be...
+                        /// </param>
+                        /// <param name="CalRegisterAndUserCalSet">
+                        /// If CalRegisterAndUserCalSet = true, Cal data will be saved to a Cal Register and a User Cal Set. The filename is automatically generated.
+                        /// If CalRegisterAndUserCalSet = false, Cal data will be save only to a Cal Register.
+                        /// </param>
+                        /// </summary>
+                        public void Save(string ExistingCalSetName = null, bool CalSetNameIsGUID = false, bool defaultToSavePreference = true, bool CalRegisterAndUserCalSet = false)
+                        {
+                            if (String.IsNullOrEmpty(ExistingCalSetName)) {
+                                if (defaultToSavePreference == true) {
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:SAVE:IMMediate", _parentChannel.Number));
+                                } else {
+                                    _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:SAVE:IMMediate {1}", _parentChannel.Number, CalRegisterAndUserCalSet ? "ON" : "OFF"));
+                                }
+                            } else {
+                                ExistingCalSetName = CalSetNameIsGUID ? String.Format("{{{0}}}", ExistingCalSetName) : ExistingCalSetName;
+                                _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:SAVE:CSET '{1}'", _parentChannel.Number, ExistingCalSetName));
+                            }
+                        }
+                        /// <summary>
+                        /// Gets the number of measurement steps required to complete the current guided calibration.
+                        /// This command is sent after assigning port connectors, port cal kits, and Initiate(...).
+                        /// </summary>
+                        /// <returns></returns>
+                        public int GetNumberOfSteps()
+                        {
+                            _parentChannel._parentPNAX.ClearEventRegisters();
+                            _parentChannel._parentPNAX.WriteString(String.Format("SENSe{0}:CORRection:COLLect:GUIDed:STEPs?", _parentChannel.Number));
+                            _parentChannel._parentPNAX.WaitForMeasurementToComplete(_parentChannel._parentPNAX.Timeout);
+                            return (int)_parentChannel._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
+                        }
+                    }
+
+                    // Variables
+                    private ChannelClass _parentChannel;
+
+                    // Properties
+                    /// <summary>
+                    /// Manage Guided Calibrations on this channel.
+                    /// </summary>
+                    public GuidedClass Guided
+                    { get; private set; }
+
+                    // Constructor
+                    internal CorrectionClass(ChannelClass ParentChannel)
+                    {
+                        _parentChannel = ParentChannel;
+                        Guided = new GuidedClass(_parentChannel);
+                    }
+
+                    // Private Methods
+
+
+                    // Public Methods
+
+
+                }
                 public class MeasurementClass {
 
                     // Nested Classes
@@ -3227,7 +4586,7 @@ namespace SCPI {
                     /// The trace that this measurement is attached to.
                     /// null if this measurement has not been attached to a trace.
                     /// </summary>
-                    public PNAX.WindowClass.TraceClass AttachedTrace
+                    public PNAX.DisplayClass.WindowClass.TraceClass AttachedTrace
                     { get; internal set; }
 
                     // Constructor
@@ -3480,7 +4839,7 @@ namespace SCPI {
                         if (_measurements.ContainsKey(Name)) {
                             _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:DELete:NAME {1}", _parentChannel.Number, Name));
                             if (_measurements[Name].AttachedTrace != null) {
-                                _parentChannel._parentPNAX.Windows[_measurements[Name].AttachedTrace._parentWindow.Number].Traces.Delete(_measurements[Name].AttachedTrace.Number);
+                                _parentChannel._parentPNAX.Display.Windows[_measurements[Name].AttachedTrace._parentWindow.Number].Traces.Delete(_measurements[Name].AttachedTrace.Number);
                             }
                             _measurements.Remove(Name);
                             return true;
@@ -3501,7 +4860,7 @@ namespace SCPI {
                         foreach (string name in allNames) {
                             _parentChannel._parentPNAX.WriteString(String.Format("CALCulate{0}:PARameter:DELete:NAME {1}", _parentChannel.Number, name));
                             if (_measurements.ContainsKey(name) && _measurements[name].AttachedTrace != null) {
-                                _parentChannel._parentPNAX.Windows[_measurements[name].AttachedTrace._parentWindow.Number].Traces.Delete(_measurements[name].AttachedTrace.Number);
+                                _parentChannel._parentPNAX.Display.Windows[_measurements[name].AttachedTrace._parentWindow.Number].Traces.Delete(_measurements[name].AttachedTrace.Number);
                             }
                         }
                         _measurements.Clear();
@@ -3529,6 +4888,11 @@ namespace SCPI {
                 public int Number
                 { get; private set; }
                 /// <summary>
+                /// Control the path configuration for this channel.
+                /// </summary>
+                public PathClass Path
+                { get; private set; }
+                /// <summary>
                 /// Control averaging settings on this channel.
                 /// </summary>
                 public AveragingClass Averaging
@@ -3554,6 +4918,11 @@ namespace SCPI {
                 public SweepClass Sweep
                 { get; private set; }
                 /// <summary>
+                /// Control Calibrations for this channel.
+                /// </summary>
+                public CorrectionClass Correction
+                { get; private set; }
+                /// <summary>
                 /// Control measurements on this channel.
                 /// </summary>
                 public MeasurementCollectionClass Measurements
@@ -3564,12 +4933,13 @@ namespace SCPI {
                 {
                     this.Number = Number;
                     _parentPNAX = ParentPNAX;
-
+                    Path = new PathClass(this);
                     Averaging = new AveragingClass(this);
                     Frequency = new FrequencyClass(this);
                     IFBandwidth = new IFBandwidthClass(this);
                     Source = new SourceClass(this);
                     Sweep = new SweepClass(this);
+                    Correction = new CorrectionClass(this);
                     Measurements = new MeasurementCollectionClass(this);
                 }
 
@@ -3689,6 +5059,7 @@ namespace SCPI {
 
                     // TO DO: Add a new channel to the dictionary
                     // TO DO: When a new channel is added, call to FindPorts in Channel.Source.Ports.FindPorts()
+                    // TO DO: When a new channel is added, call to FindPorts in Channel.Correction.Guided.Ports.FindPorts()
 
                     return availableChannelNumber;
                 }
@@ -3732,682 +5103,6 @@ namespace SCPI {
                 }
 
             }
-            public class WindowClass {
-
-                // Nested Classes
-                public class TraceClass {
-
-                    // Variables
-                    internal WindowClass _parentWindow;
-                    private bool _memory;
-                    private bool _display;
-                    private string _title;
-                    private bool _titleState;
-                    private double _perDivision;
-                    private double _minimumPerDivision;
-                    private double _maximumPerDivision;
-                    private double _referenceLevel;
-                    private double _minimumReferenceLevel;
-                    private double _maximumReferenceLevel;
-                    private int _referencePosition;
-                    private int _minimumReferencePosition;
-                    private int _maximumReferencePosition;
-
-                    // Properties
-                    /// <summary>
-                    /// Number of the trace within the window. Not the measurement number on the PNAX display.
-                    /// </summary>
-                    public int Number
-                    { get; private set; }
-                    /// <summary>
-                    /// The measurement attached to this trace.
-                    /// </summary>
-                    public PNAX.ChannelClass.MeasurementClass AttachedMeasurement
-                    { get; private set; }
-                    /// <summary>
-                    /// Enable or disable the memory trace.
-                    /// </summary>
-                    public bool Memory
-                    {
-                        get { return this.GetMemory(); }
-                        set { this.SetMemory(value); }
-                    }
-                    /// <summary>
-                    /// Turn on or off the trace on the display.
-                    /// </summary>
-                    public bool Display
-                    {
-                        get { return this.GetDisplay(); }
-                        set { this.SetDisplay(value); }
-                    }
-                    /// <summary>
-                    /// Title of the trace that shows up on the PNAX display.
-                    /// </summary>
-                    public string Title
-                    {
-                        get { return this.GetTitle(); }
-                        set { this.SetTitle(value); }
-                    }
-                    /// <summary>
-                    /// Enable or disable the displaying of the title.
-                    /// </summary>
-                    public bool TitleState
-                    {
-                        get { return this.GetTitleState(); }
-                        set { this.SetTitleState(value); }
-                    }
-                    /// <summary>
-                    /// Y Axis Per Division Value.
-                    /// </summary>
-                    public double PerDivision
-                    {
-                        get { return this.GetPerDivision(); }
-                        set { this.SetPerDivision(value); }
-                    }
-                    /// <summary>
-                    /// Current minimum Y Axis Per Division Value
-                    /// </summary>
-                    public double MinimumPerDivision
-                    {
-                        get { return this.GetMinimumPerDivision(); }
-                    }
-                    /// <summary>
-                    /// Current maximum Y Axis Per Division Value
-                    /// </summary>
-                    public double MaximumPerDivision
-                    {
-                        get { return this.GetMaximumPerDivision(); }
-                    }
-                    /// <summary>
-                    /// Y Axis Reference Level
-                    /// </summary>
-                    public double ReferenceLevel
-                    {
-                        get { return this.GetReferenceLevel(); }
-                        set { this.SetReferenceLevel(value); }
-                    }
-                    /// <summary>
-                    /// Current Minimum Y Axis Reference Level
-                    /// </summary>
-                    public double MinimumReferenceLevel
-                    {
-                        get { return this.GetMinimumReferenceLevel(); }
-                    }
-                    /// <summary>
-                    /// Current Maximum Y Axis Reference Level
-                    /// </summary>
-                    public double MaximumReferenceLevel
-                    {
-                        get { return this.GetMaximumReferenceLevel(); }
-                    }
-                    /// <summary>
-                    /// Y Axis Reference Position
-                    /// </summary>
-                    public int ReferencePosition
-                    {
-                        get { return this.GetReferencePosition(); }
-                        set { this.SetReferencePosition(value); }
-                    }
-                    /// <summary>
-                    /// Current Minimum Y Axis Reference Position
-                    /// </summary>
-                    public int MinimumReferencePosition
-                    {
-                        get { return this.GetMinimumReferencePosition(); }
-                    }
-                    /// <summary>
-                    /// Current Maximum Y Axis Reference Position
-                    /// </summary>
-                    public int MaximumReferencePosition
-                    {
-                        get { return this.GetMaximumReferencePosition(); }
-                    }
-
-                    // Constructor
-                    internal TraceClass(WindowClass ParentWindow, int Number, PNAX.ChannelClass.MeasurementClass AttachedMeasurment)
-                    {
-                        _parentWindow = ParentWindow;
-                        this.Number = Number;
-                        this.AttachedMeasurement = AttachedMeasurement;
-                    }
-
-                    // Private Methods
-                    private bool GetMemory()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:MEMory:STATe?", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _memory = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                        return _memory;
-                    }
-                    private void SetMemory(bool Memory)
-                    {
-                        _memory = Memory;
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:MEMory:STATe {2}", _parentWindow.Number, Number, _memory ? "ON" : "OFF"));
-                    }
-                    private bool GetDisplay()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:STATe?", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _display = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                        return _display;
-                    }
-                    private void SetDisplay(bool Display)
-                    {
-                        _display = Display;
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:STATe {2}", _parentWindow.Number, Number, _display ? "ON" : "OFF"));
-                    }
-                    private string GetTitle()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:DATA?", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _title = _parentWindow._parentPNAX.ReadString();
-                        return _title;
-                    }
-                    private void SetTitle(string Title)
-                    {
-                        _title = Title;
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:DATA {2}", _parentWindow.Number, Number, _title));
-                    }
-                    private bool GetTitleState()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:STATe?", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _titleState = (((byte)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                        return _titleState;
-                    }
-                    private void SetTitleState(bool TitleState)
-                    {
-                        _titleState = TitleState;
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:TITLe:STATe {2}", _parentWindow.Number, Number, _titleState ? "ON" : "OFF"));
-                    }
-                    private double GetPerDivision()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision?", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _perDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _perDivision;
-                    }
-                    private void SetPerDivision(double PerDivision)
-                    {
-                        _perDivision = PerDivision;
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision {2}", _parentWindow.Number, Number, _perDivision));
-                    }
-                    private double GetMinimumPerDivision()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision? MINimum", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _minimumPerDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _minimumPerDivision;
-                    }
-                    private double GetMaximumPerDivision()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:PDIVision? MAXimum", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _maximumPerDivision = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _maximumPerDivision;
-                    }
-                    private double GetReferenceLevel()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel?", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _referenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _referenceLevel;
-                    }
-                    private void SetReferenceLevel(double ReferenceLevel)
-                    {
-                        _referenceLevel = ReferenceLevel;
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel {2}", _parentWindow.Number, Number, _referenceLevel));
-                    }
-                    private double GetMinimumReferenceLevel()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel? MINimum", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _minimumReferenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _minimumReferenceLevel;
-                    }
-                    private double GetMaximumReferenceLevel()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RLEVel? MAXimum", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _maximumReferenceLevel = (double)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_R8, true);
-                        return _maximumReferenceLevel;
-                    }
-                    private int GetReferencePosition()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition?", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _referencePosition = (int)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
-                        return _referencePosition;
-                    }
-                    private void SetReferencePosition(int ReferencePosition)
-                    {
-                        _referencePosition = ReferencePosition;
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition {2}", _parentWindow.Number, Number, _referencePosition));
-                    }
-                    private int GetMinimumReferencePosition()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition? MINimum", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _minimumReferencePosition = (int)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
-                        return _minimumReferencePosition;
-                    }
-                    private int GetMaximumReferencePosition()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:RPOSition? MAXimum", _parentWindow.Number, Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        _maximumReferencePosition = (int)_parentWindow._parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_I4, true);
-                        return _maximumReferencePosition;
-                    }
-
-                    // Public Methods
-                    /// <summary>
-                    /// Select this trace as the active trace.
-                    /// </summary>
-                    public void Select()
-                    {
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:SELect", _parentWindow.Number, Number));
-                    }
-                    /// <summary>
-                    /// Auto scale Y axis.
-                    /// </summary>
-                    public void AutoScaleY()
-                    {
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:Y:SCALe:AUTO", _parentWindow.Number, Number));
-                    }
-
-                }
-                public class TraceCollectionClass {
-
-                    // Variables
-                    private WindowClass _parentWindow;
-                    private Dictionary<int, TraceClass> _traces;
-
-                    // Properties
-                    /// <summary>
-                    /// Number of traces in this window managed by this driver.
-                    /// </summary>
-                    public int Count
-                    {
-                        get { return _traces.Count; }
-                    }
-                    /// <summary>
-                    /// Trace Numbers in this window managed by this driver.
-                    /// </summary>
-                    public int[] ManagedTraceNumbers
-                    {
-                        get { return this._traces.Keys.ToArray(); }
-                    }
-                    /// <summary>
-                    /// All open trace numbers in the window in the PNAX. Not all traces are necessarily managed by this driver.
-                    /// i.e. If a trace was created locally using the front panel, this driver does not manage its use.
-                    /// </summary>
-                    public int[] OpenTraceNumbers
-                    {
-                        get { return this.GetOpenTraceNumbers(); }
-                    }
-
-                    // Constructor
-                    internal TraceCollectionClass(WindowClass ParentWindow)
-                    {
-                        _parentWindow = ParentWindow;
-                    }
-
-                    // Indexer
-                    public TraceClass this[int TraceNumber]
-                    {
-                        get
-                        {
-                            if (!_traces.ContainsKey(TraceNumber))
-                                throw new System.ArgumentException("Trace does not exist", "TraceNumber");
-
-                            return _traces[TraceNumber];
-                        }
-                    }
-
-                    // Protected Methods
-                    protected virtual int[] GetOpenTraceNumbers()
-                    {
-                        _parentWindow._parentPNAX.ClearEventRegisters();
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:CATalog?", _parentWindow.Number));
-                        _parentWindow._parentPNAX.WaitForMeasurementToComplete(_parentWindow._parentPNAX.Timeout);
-                        return (int[])_parentWindow._parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
-
-                    }
-
-                    // Public Methods
-                    /// <summary>
-                    /// Adds a new trace with the next available trace number and attaches the measurement.
-                    /// </summary>
-                    /// <returns>
-                    /// The trace number of the newly created trace.
-                    /// Returns -1, if the maximum number of traces is reached.
-                    /// </returns>
-                    public int Add(PNAX.ChannelClass.MeasurementClass AttachedMeasurement)
-                    {
-                        int availableTraceNumber = 1;
-                        int[] openTraceNumbers = OpenTraceNumbers;
-
-                        if (openTraceNumbers.Length == _parentWindow._parentPNAX.Capabilities.MaximumTracesPerWindow)
-                            return -1;
-
-                        for (int i = 0; i < openTraceNumbers.Length; i++) {
-                            if (!openTraceNumbers.Contains(i + 1)) {
-                                availableTraceNumber = i + 1;
-                                break;
-                            }
-                        }
-
-                        _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:FEED {2}", _parentWindow.Number, availableTraceNumber, AttachedMeasurement.Name));
-                        _traces.Add(availableTraceNumber, new TraceClass(_parentWindow, availableTraceNumber, AttachedMeasurement));
-
-                        return availableTraceNumber;
-                    }
-                    /// <summary>
-                    /// Deletes the specified trace from the collection and destroys the trace on the PNAX.
-                    /// </summary>
-                    /// <returns>True if the trace is deleted. False if the specified trace number doesn't exist.</returns>
-                    public bool Delete(int TraceNumber)
-                    {
-                        if (_traces.ContainsKey(TraceNumber)) {
-                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, TraceNumber));
-                            _traces.Remove(TraceNumber);
-                            return true;
-                        } else if (OpenTraceNumbers.Contains(TraceNumber)) {
-                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, TraceNumber));
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                    /// <summary>
-                    /// Iterates through all open trace numbers and deletes them.
-                    /// </summary>
-                    public void DeleteAll()
-                    {
-                        List<int> allNumbers = new List<int>(OpenTraceNumbers);
-                        foreach (int number in allNumbers) {
-                            _parentWindow._parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe{1}:DELete", _parentWindow.Number, number));
-                        }
-                        _traces.Clear();
-                    }
-
-                }
-                
-                // Variables
-                private PNAX _parentPNAX;
-                private bool _scaleCoupling;
-                private string _title;
-                private bool _titleState;
-                
-                // Properties
-                /// <summary>
-                /// Number of this window.
-                /// </summary>
-                public int Number
-                { get; private set; }
-                /// <summary>
-                /// Enable or disable scale coupling for this window.
-                /// </summary>
-                public bool ScaleCoupling
-                {
-                    get { return this.GetScaleCoupling(); }
-                    set { this.SetScaleCoupling(value); }
-                }
-                /// <summary>
-                /// Title to be displayed in the window title area.
-                /// </summary>
-                public string Title
-                {
-                    get { return this.GetTitle(); }
-                    set { this.SetTitle(value); }
-                }
-                /// <summary>
-                /// Enable or disable displaying of the title.
-                /// </summary>
-                public bool TitleState
-                {
-                    get { return this.GetTitleState(); }
-                    set { this.SetTitleState(value); }
-                }
-                /// <summary>
-                /// Control Traces in this window.
-                /// </summary>
-                public TraceCollectionClass Traces
-                { get; private set; }
-
-                // Constructor
-                internal WindowClass(int Number, PNAX ParentPNAX)
-                {
-                    this.Number = Number;
-                    _parentPNAX = ParentPNAX;
-
-                    Traces = new TraceCollectionClass(this);
-                }
-
-                // Private Methods
-                private bool GetScaleCoupling()
-                {
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe:Y:SCALe:COUPle:STATe?", Number));
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    _scaleCoupling = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                    return _scaleCoupling;
-                }
-                private void SetScaleCoupling(bool ScaleCoupling)
-                {
-                    _scaleCoupling = ScaleCoupling;
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TRACe:Y:SCALe:COUPle:STATe {1}", Number, _scaleCoupling ? "ON" : "OFF"));
-                }
-                private string GetTitle()
-                {
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:DATA?", Number));
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    _title = _parentPNAX.ReadString();
-                    return _title;
-                }
-                private void SetTitle(string Title)
-                {
-                    if (Title.Length > 50)
-                        Title = Title.Substring(0, 50);
-
-                    _title = Title;
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:DATA {1}", Number, _title));
-                }
-                private bool GetTitleState()
-                {
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:STATe?", Number));
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    _titleState = (((byte)_parentPNAX.ReadNumber(IEEEASCIIType.ASCIIType_UI1, true)) == 1);
-                    return _titleState;
-                }
-                private void SetTitleState(bool TitleState)
-                {
-                    _titleState = TitleState;
-                    _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:TITLe:STATe {1}", Number, _titleState ? "ON" : "OFF"));
-                }
-
-            }
-            public class WindowCollectionClass : IEnumerable<WindowClass> {
-
-                // Variables
-                private PNAX _parentPNAX;
-                private Dictionary<int, WindowClass> _windows;
-                private ScaleCouplingMethodEnum _scaleCouplingMethod;
-
-                // Properties
-                /// <summary>
-                /// Number of windows managed by this driver.
-                /// </summary>
-                public int Count
-                {
-                    get { return this._windows.Count; }
-                }
-                /// <summary>
-                /// Window Numbers managed by this driver.
-                /// </summary>
-                public int[] ManagedWindowNumbers
-                {
-                    get { return this._windows.Keys.ToArray(); }
-                }
-                /// <summary>
-                /// All open window numbers on the PNAX. Not all windows are necessarily managed by this driver.
-                /// i.e. If a window was created locally using the front panel, this driver does not manage its use.
-                /// </summary>
-                public int[] OpenWindowNumbers
-                {
-                    get { return this.GetOpenWindowNumbers(); }
-                }
-                /// <summary>
-                /// Coupling method for trace scaling.
-                /// Off = No coupling.
-                /// Window = Scale settings are coupled for traces in each window.
-                /// All = Scale settings are coupled for traces in all selected windows. Setting controlled by coupling state of each window.
-                /// </summary>
-                public ScaleCouplingMethodEnum ScaleCouplingMethod
-                {
-                    get { return this.GetScaleCouplingMethod(); }
-                    set { this.SetScaleCouplingMethod(value); }
-                }
-
-                // Constructor
-                internal WindowCollectionClass(PNAX ParentPNAX)
-                {
-                    _parentPNAX = ParentPNAX;
-                }
-
-                // Indexer
-                public WindowClass this[int Number]
-                {
-                    get
-                    {
-                        if (!_windows.ContainsKey(Number))
-                            throw new System.IndexOutOfRangeException("Window Number does not exist or is not managed by this driver.");
-
-                        return _windows[Number];
-                    }
-                }
-
-                // Private Methods
-                private int[] GetOpenWindowNumbers()
-                {
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString("SYSTem:WINDows:CATalog?");
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    return (int[])_parentPNAX.ReadList(IEEEASCIIType.ASCIIType_I4, ",;");
-                }
-                private ScaleCouplingMethodEnum GetScaleCouplingMethod()
-                {
-                    string retVal;
-                    _parentPNAX.ClearEventRegisters();
-                    _parentPNAX.WriteString("DISPlay:WINDow:TRACe:Y:SCALe:COUPle:METHod?");
-                    _parentPNAX.WaitForMeasurementToComplete(_parentPNAX.Timeout);
-                    retVal = _parentPNAX.ReadString();
-                    if (retVal.Contains("OFF")) {
-                        _scaleCouplingMethod = ScaleCouplingMethodEnum.Off;
-                    } else if (retVal.Contains("WIND")) {
-                        _scaleCouplingMethod = ScaleCouplingMethodEnum.Window;
-                    } else {
-                        _scaleCouplingMethod = ScaleCouplingMethodEnum.All;
-                    }
-                    return _scaleCouplingMethod;
-                }
-                private void SetScaleCouplingMethod(ScaleCouplingMethodEnum ScaleCouplingMethod)
-                {
-                    _scaleCouplingMethod = ScaleCouplingMethod;
-                    switch (_scaleCouplingMethod) {
-                        case ScaleCouplingMethodEnum.Off:
-                            _parentPNAX.WriteString("DISPlay:WINDow:TRACe:Y:SCALe:COUPle:METHod OFF");
-                            break;
-                        case ScaleCouplingMethodEnum.Window:
-                            _parentPNAX.WriteString("DISPlay:WINDow:TRACe:Y:SCALe:COUPle:METHod WINDow");
-                            break;
-                        case ScaleCouplingMethodEnum.All:
-                            _parentPNAX.WriteString("DISPlay:WINDow:TRACe:Y:SCALe:COUPle:METHod ALL");
-                            break;
-                    }
-                }
-
-                // Public Methods
-                /// <summary>
-                /// Adds a new window with the next available window number.
-                /// </summary>
-                /// <returns>
-                /// The window number of the newly created channel.
-                /// If the maximum number of windows is reached, returns -1.
-                /// </returns>
-                public int Add()
-                {
-                    int availableWindowNumber = 1;
-                    int[] openWindowNumbers = OpenWindowNumbers;
-
-                    if (openWindowNumbers.Length == _parentPNAX.Capabilities.MaximumWindows)
-                        return -1;
-
-                    for (int i = 0; i < openWindowNumbers.Length; i++) {
-                        if (!openWindowNumbers.Contains(i + 1)) {
-                            availableWindowNumber = i + 1;
-                            break;
-                        }
-                    }
-
-                    // TO DO: Add a new window to the dictionary
-
-                    return availableWindowNumber;
-                }
-                /// <summary>
-                /// Deletes the specified window number from the collection and destroys the window on the PNAX.
-                /// </summary>
-                /// <returns>True if the window is deleted. False if the specified window number doesn't exist.</returns>
-                public bool Delete(int WindowNumber)
-                {
-                    if (_windows.ContainsKey(WindowNumber)) {
-                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", WindowNumber));
-                        _windows.Remove(WindowNumber);
-                        return true;
-                    } else if (OpenWindowNumbers.Contains(WindowNumber)) {
-                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", WindowNumber));
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-                /// <summary>
-                /// Iterates through all open window numbers and deletes them.
-                /// </summary>
-                public void DeleteAll()
-                {
-                    List<int> allNumbers = new List<int>(OpenWindowNumbers);
-                    foreach (int number in allNumbers) {
-                        _parentPNAX.WriteString(String.Format("DISPlay:WINDow{0}:STATe OFF", number));
-                    }
-                    _windows.Clear();
-                }
-                public IEnumerator<WindowClass> GetEnumerator()
-                {
-                    return _windows.Values.GetEnumerator();
-                }
-
-                // Unused Interface Methods
-                IEnumerator IEnumerable.GetEnumerator()
-                {
-                    throw new NotImplementedException();
-                }
-            }
 
             // Enumerations
                 // Data Format
@@ -4420,6 +5115,10 @@ namespace SCPI {
             public enum ExternalTriggerSlopeEnum { Positive, Negative };
             public enum ExternalTriggerTypeEnum { Edge, Level };
             public enum ExternalTriggerRouteEnum { Main, Math, Pulse3 };
+                // Calibration
+            public enum GuidedCalibrationSyncEnum { Synchronous, Asynchronous };
+            public enum GuidedCalibrationIsolationEnum { All, None, Add, Remove };
+            public enum GuidedCalibrationSavePreferenceEnum { CalRegister, UserCalSet, Reuse };
                 // Averaging
             public enum AveragingModeEnum { Point, Sweep };
                 // Sweep
@@ -4459,6 +5158,11 @@ namespace SCPI {
             public CapabilitiesClass Capabilities
             { get; private set; }
             /// <summary>
+            /// Global correction/calibration settings of the PNAX.
+            /// </summary>
+            public CorrectionClass Correction
+            { get; private set; }
+            /// <summary>
             /// Control the display of the PNAX.
             /// </summary>
             public DisplayClass Display
@@ -4478,22 +5182,17 @@ namespace SCPI {
             /// </summary>
             public ChannelCollectionClass Channels
             { get; private set; }
-            /// <summary>
-            /// Control the windows of the PNAX.
-            /// </summary>
-            public WindowCollectionClass Windows
-            { get; private set; }
 
             // Constructor
             public PNAX()
                 : base()
             {
                 Capabilities = new CapabilitiesClass(this);
+                Correction = new CorrectionClass(this);
                 Display = new DisplayClass(this);
                 Trigger = new TriggerClass(this);
                 Output = new OutputClass(this);
                 Channels = new ChannelCollectionClass(this);
-                Windows = new WindowCollectionClass(this);
             }
             
             // Private Methods
